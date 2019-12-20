@@ -3,7 +3,10 @@
 namespace client;
 
 use client\utils\PlayerLocation;
+use pocketmine\item\Item;
 use pocketmine\math\Vector3;
+use protocol\MobEquipmentPacket;
+use protocol\PlayerActionPacket;
 
 class BotHelpers
 {
@@ -30,24 +33,6 @@ class BotHelpers
 		$pos->setYaw($yaw);
 		$pos->setHeadYaw($yaw);
 		$pos->setPitch($pitch);
-
-		/*if ($dx > 0 || $dz > 0) {
-			$tanOutput = 90 - self::radianToDegree(atan($dx / $dz));
-			$thetaOffset = 270.0;
-			if ($dz < 0) {
-				$thetaOffset = 90.0;
-			}
-			$yaw = $thetaOffset + $tanOutput;
-
-			$bDiff = sqrt(($dx * $dx) + ($dz * $dz));
-			$dy = $source->getY() - $target->getY();
-			$pitch = self::radianToDegree(atan($dy / $bDiff));
-
-			$pos->setYaw($yaw);
-			$pos->setHeadYaw($yaw);
-			$pos->setPitch($pitch);
-		}*/
-
 		return $pos;
 	}
 
@@ -58,5 +43,48 @@ class BotHelpers
 	private static function radianToDegree(float $angle): float
 	{
 		return (float)$angle * (180.0 / M_PI);
+	}
+
+	/**
+	 * @param PocketEditionClient $client
+	 * @param int $action
+	 */
+	static function action(PocketEditionClient $client, int $action)
+	{
+		$player = $client->getPlayer();
+		$pk = new PlayerActionPacket();
+		$pk->entityRuntimeId = $player->getId();
+		$pk->action = PlayerActionPacket::ACTION_RESPAWN;
+
+		$pos = $player->getPosition();
+		$pk->x = $pos->getFloorX();
+		$pk->y = $pos->getFloorY();
+		$pk->z = $pos->getFloorZ();
+
+		$pk->face = 0;
+		$client->sendDataPacket($pk);
+	}
+
+	/**
+	 * @param PocketEditionClient $client
+	 */
+	static function respawn(PocketEditionClient $client)
+	{
+		self::action($client, PlayerActionPacket::ACTION_RESPAWN);
+	}
+
+	/**
+	 * @param PocketEditionClient $client
+	 * @param Item $item
+	 * @param int $selectedSlot
+	 */
+	static function mobEquipment(PocketEditionClient $client, Item $item, int $selectedSlot)
+	{
+		$message = new MobEquipmentPacket();
+		$message->entityRuntimeId = $client->getId();
+		$message->item = $item;
+		$message->inventorySlot = $selectedSlot;
+		$message->hotbarSlot = $selectedSlot + 9;
+		$client->sendDataPacket($message);
 	}
 }

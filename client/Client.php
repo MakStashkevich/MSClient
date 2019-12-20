@@ -17,7 +17,7 @@ class Client
 	/** @var Console */
 	private $console;
 	/** @var bool */
-	private $stopped = \false;
+	private $stopped = false;
 	/** @var int */
 	private $chatId;
 
@@ -29,7 +29,6 @@ class Client
 		$client = new PocketEditionClient(
             new Address('dragonw.ru', 19999),
 //        new Address('bmpe.pw', 19134),
-//			new Address('play.mims.su', 19100),
 			new Bot(
 				'robotXXXsuper',
 				'sosipisos',
@@ -41,7 +40,7 @@ class Client
 		$this->list[] = $client;
 		if (count($this->list) < 2) {
 			$this->chatId = 0;
-			$this->console = new Console($this, \true);
+			$this->console = new Console($this, true);
 		} else $this->console = new Console($this);
 	}
 
@@ -51,7 +50,7 @@ class Client
 		$this->console->tick();
 		/** @var PocketEditionClient $bot */
 		foreach ($this->list as &$bot) {
-			if ($bot->tick() == \false) { //Disconnect
+			if ($bot->tick() == false) { //Disconnect
 				info('Client disconnect...');
 				$params = $bot->getParams();
 				$bot->quit();
@@ -63,7 +62,7 @@ class Client
 
 	function stop()
 	{
-		$this->stopped = \true;
+		$this->stopped = true;
 		info('Quit bots in server...');
 		/** @var PocketEditionClient $bot */
 		foreach ($this->list as &$bot) {
@@ -94,9 +93,9 @@ class Client
 	{
 		if (isset($this->list[$id])) {
 			$this->chatId = $id;
-			return \true;
+			return true;
 		}
-		return \false;
+		return false;
 	}
 
 	function removeChatId()

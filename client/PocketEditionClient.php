@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace client;
 
 use client\utils\PlayerLocation;
+use Exception;
+use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\AddPlayerPacket;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
@@ -32,15 +34,15 @@ use pocketmine\network\mcpe\protocol\RemoveEntityPacket;
 use pocketmine\network\mcpe\protocol\RequestChunkRadiusPacket;
 use pocketmine\network\mcpe\protocol\ResourcePackClientResponsePacket;
 use pocketmine\network\mcpe\protocol\ResourcePacksInfoPacket;
+use pocketmine\network\mcpe\protocol\RespawnPacket;
 use pocketmine\network\mcpe\protocol\SetEntityDataPacket;
 use pocketmine\network\mcpe\protocol\SetEntityMotionPacket;
 use pocketmine\network\mcpe\protocol\SetTimePacket;
 use pocketmine\network\mcpe\protocol\SetTitlePacket;
 use pocketmine\network\mcpe\protocol\StartGamePacket;
-
-use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\network\mcpe\protocol\UpdateAttributesPacket;
+use pocketmine\utils\TextFormat;
 use protocol\AddEntityPacket;
 use protocol\AddItemEntityPacket;
 use protocol\BlockEventPacket;
@@ -50,15 +52,12 @@ use protocol\MobArmorEquipmentPacket;
 use protocol\MobEquipmentPacket;
 use protocol\SetEntityLinkPacket;
 use protocol\UpdateBlockPacket;
-use raklib\protocol\DisconnectionNotification;
-use utils\NetworkCompression;
-use utils\PacketStream;
-
 use raklib\protocol\ACK;
 use raklib\protocol\ConnectedPing;
 use raklib\protocol\ConnectionRequest;
 use raklib\protocol\ConnectionRequestAccepted;
 use raklib\protocol\Datagram;
+use raklib\protocol\DisconnectionNotification;
 use raklib\protocol\EncapsulatedPacket;
 use raklib\protocol\NACK;
 use raklib\protocol\NewIncomingConnection;
@@ -68,8 +67,11 @@ use raklib\protocol\OpenConnectionRequest1;
 use raklib\protocol\OpenConnectionRequest2;
 use raklib\protocol\Packet;
 use raklib\protocol\PacketReliability;
-
 use raklib\server\UDPServerSocket;
+use ReflectionObject;
+use Throwable;
+use utils\NetworkCompression;
+use utils\PacketStream;
 
 class PocketEditionClient extends UDPServerSocket
 {
@@ -138,7 +140,7 @@ class PocketEditionClient extends UDPServerSocket
 	private $player;
 
 	/** @var bool */
-	private $disconnect = \false;
+	private $disconnect = false;
 
 	/** @var array */
 	private $params = [];
@@ -169,6 +171,22 @@ class PocketEditionClient extends UDPServerSocket
 	}
 
 	/**
+	 * @return int
+	 */
+	function getId(): int
+	{
+		return $this->player->getId();
+	}
+
+	/**
+	 * @return Bot
+	 */
+	function getPlayer(): Bot
+	{
+		return $this->player;
+	}
+
+	/**
 	 * @return array
 	 */
 	function getParams(): array
@@ -185,7 +203,7 @@ class PocketEditionClient extends UDPServerSocket
 
 	protected function getClassName(object $class): string
 	{
-		return (new \ReflectionObject($class))->getShortName();
+		return (new ReflectionObject($class))->getShortName();
 	}
 
 	protected function sendRakNetPacket(Packet $packet): void
@@ -222,7 +240,7 @@ class PocketEditionClient extends UDPServerSocket
 		$this->ACKQueue[] = $datagram->seqNumber;
 	}
 
-	protected function sendDataPacket($packets, ?int $compressionLevel = null): void
+	public function sendDataPacket($packets, ?int $compressionLevel = null): void
 	{
 		$stream = new PacketStream();
 		if (!is_array($packets)) {
@@ -414,7 +432,13 @@ class PocketEditionClient extends UDPServerSocket
 					}
 				}
 			}
-		} else return \false;
+		} else return false;
+
+		if ($this->player->isDeath()) {
+			BotHelpers::respawn($this);
+			$this->player->setDeath(false);
+			send('Bot respawn success');
+		}
 
 		if ($this->readPacket($buffer, $this->serverAddress->ip, $this->serverAddress->port) !== false) {
 			if (($packet = RakNetPool::getPacket($buffer)) !== null) {
@@ -430,7 +454,7 @@ class PocketEditionClient extends UDPServerSocket
 			$this->sendSessionRakNetPacket($pk);
 		}
 		$this->titleTick();
-		return \true;
+		return true;
 	}
 
 	protected function titleTick()
@@ -493,9 +517,6 @@ class PocketEditionClient extends UDPServerSocket
 		}
 	}
 
-	private $next = '';
-	private $nextTime = 0;
-
 	protected function handlePacket(Packet $packet): void
 	{
 		if (!$packet instanceof Datagram) {
@@ -519,10 +540,10 @@ class PocketEditionClient extends UDPServerSocket
 				}
 			}
 		} elseif ($packet instanceof OpenConnectionReply1) {
+			$this->sendConnection = true;
 			$this->sendOpenConnectionRequest2();
 		} elseif ($packet instanceof OpenConnectionReply2) {
 			$this->sendConnectionRequest();
-			$this->sendConnection = true;
 		} elseif ($packet instanceof ConnectionRequestAccepted) {
 			$this->sendNewIncomingConnection();
 			$this->sendLogin = microtime(true) + (mt_rand(24, 80) * 0.001);
@@ -680,7 +701,7 @@ class PocketEditionClient extends UDPServerSocket
 				$payload = substr($packet->buffer, 1);
 				try {
 					$stream = new PacketStream(NetworkCompression::decompress($payload));
-				} catch (\Exception $e) {
+				} catch (Exception $e) {
 					return;
 				}
 				while (!$stream->feof()) {
@@ -698,17 +719,19 @@ class PocketEditionClient extends UDPServerSocket
 		$class = $this->getClassName($packet);
 		try {
 			$packet->decode();
-		} catch (\Throwable $e) {
+		} catch (Throwable $e) {
 			echo "Error in decode " . $class . PHP_EOL . $e->getMessage() . PHP_EOL;
 			return;
 		}
 		if ($packet instanceof PlayStatusPacket) {
 			if ($packet->status === PlayStatusPacket::PLAYER_SPAWN) {
-				//$this->register();
+				//todo
 			}
+		} elseif ($packet instanceof RespawnPacket) {
+			//todo
 		} elseif ($packet instanceof DisconnectPacket) {
-			mess('DISCONNECT', \pocketmine\utils\TextFormat::toANSI($packet->message . \pocketmine\utils\TextFormat::RESET));
-			$this->disconnect = \true;
+			mess('DISCONNECT', TextFormat::toANSI($packet->message . TextFormat::RESET));
+			$this->disconnect = true;
 			return;
 		} elseif ($packet instanceof TextPacket) {
 			$text = isset($packet->source) ? $packet->source : $packet->message;
@@ -740,12 +763,12 @@ class PocketEditionClient extends UDPServerSocket
 					$type = 'ANNOUNCEMENT';
 					break;
 			}
-			mess($type, \pocketmine\utils\TextFormat::toANSI($text . \pocketmine\utils\TextFormat::RESET));
+			mess($type, TextFormat::toANSI($text . TextFormat::RESET));
 			return;
 		} elseif ($packet instanceof SetTitlePacket) {
 			if (in_array($packet->type, [SetTitlePacket::TYPE_SET_TITLE, SetTitlePacket::TYPE_SET_SUBTITLE])) {
 				mess($packet->type == SetTitlePacket::TYPE_SET_TITLE ? 'TITLE' : 'SUBTITLE',
-					\pocketmine\utils\TextFormat::toANSI($packet->text . \pocketmine\utils\TextFormat::RESET)
+					TextFormat::toANSI($packet->text . TextFormat::RESET)
 				);
 			}
 			return;
@@ -756,19 +779,25 @@ class PocketEditionClient extends UDPServerSocket
 			$this->sendDataPacket($pk);
 		} elseif ($packet instanceof StartGamePacket) {
 			$pk = new RequestChunkRadiusPacket();
-			$pk->radius = 5;
+			$pk->radius = 16;
 			$this->sendDataPacket($pk);
 			$this->player->setLocation($packet->x, $packet->y, $packet->z, $packet->yaw, $packet->pitch);
 		} elseif ($packet instanceof UpdateAttributesPacket) {
 			$player = $this->player;
-			$player->setId($packet->entityRuntimeId);
-			$player->setAttribute($packet->entries);
+			if ($player->getId() === $packet->entityRuntimeId) {
+				$player->setAttribute($packet->entries);
+			}
 			return;
 		} elseif ($packet instanceof AdventureSettingsPacket) {
-//            var_dump($packet);
+			//todo
 			return;
 		} elseif ($packet instanceof PlayerListPacket) {
-//            var_dump($packet->entries[0][0], $packet->entries[0][2]);
+			foreach ($packet->entries as $id => $e) {
+				if (isset($e[2]) && $e[2] === $this->player->getName()) {
+					$this->player->setId((int)$e[1]);
+					return;
+				}
+			}
 			return;
 		} elseif ($packet instanceof EntityEventPacket) {
 			if (($seek = $this->player->seekId) > 0 && $packet->event == EntityEventPacket::HURT_ANIMATION) {

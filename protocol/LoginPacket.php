@@ -53,7 +53,7 @@ class LoginPacket extends DataPacket{
 				"ClientRandomId" => rand(),
 				"CurrentInputMode" => 2,
 				"DefaultInputMode" => 2,
-				"DeviceModel" => "iPhone XS Max",
+				"DeviceModel" => "iPhone10,4",
 				"DeviceOS" => 1,
 				"GameVersion" => "1.1.7",
 				"GuiScale" => 0,
