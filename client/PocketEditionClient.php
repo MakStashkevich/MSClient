@@ -809,30 +809,12 @@ class PocketEditionClient extends UDPServerSocket
 			$chunkX = $packet->chunkX;
 			$chunkZ = $packet->chunkZ;
 			$data = $packet->data;
-			mess('CHUNK_DATA', 'X: ' . $chunkX . ' Z: ' . $chunkZ . ' Size: ' . strlen($data));
+			//mess('CHUNK_DATA', 'X: ' . $chunkX . ' Z: ' . $chunkZ . ' Size: ' . strlen($data));
 
 			try {
-				$chunk = ChunkHelpers::decodedChunkColumn($data);
+				$chunk = ChunkHelpers::decodedChunkColumn($chunkX, $chunkZ, $data);
 				if (!isset($chunk)) return;
-
-				foreach ($chunk->BlockEntities as $blockEntity) {
-					mess('BLOCK_ENTITY', $blockEntity->Value);
-				}
-
-				$blocks = [];
-				for ($x = 0; $x < 16; $x++) {
-					for ($z = 0; $z < 16; $z++) {
-						for ($y = 255; $y >= 0; $y--) {
-							$c = $chunk->chunks[$y >> 4];
-
-							if ($chunk->GetBlock($x, $y, $z) != 0) {
-								$b = $chunk->GetBlock($x, $y, $z);
-								$blocks[$z + ($x * 16)] = $b;
-								break;
-							}
-						}
-					}
-				}
+				$this->getPlayer()->getLevel()->addChunk($chunk);
 			} catch (Exception $exception) {
 				error($exception->getMessage());
 			}

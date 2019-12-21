@@ -4,22 +4,28 @@ declare(strict_types=1);
 
 namespace Runnable {
 
-    use client\Client;
-    use client\RakNetPool;
-    use pocketmine\entity\Attribute;
-    use pocketmine\network\mcpe\protocol\PacketPool;
-    use pocketmine\utils\Terminal;
+	use BaseClassLoader;
+	use client\Client;
+	use client\RakNetPool;
+	use pocketmine\entity\Attribute;
+	use pocketmine\network\mcpe\protocol\PacketPool;
+	use pocketmine\utils\Terminal;
+	use function cli_set_process_title;
+	use function define;
+	use function getcwd;
+	use function ini_set;
+	use function realpath;
 
-    info('Load MSClient..');
+	info('Load MSClient..');
     info('Setting client...');
 
-    @\define('CLIENTPATH', \realpath(\getcwd()) . DIRECTORY_SEPARATOR);
-    @\define('CLIENTNAME', 'MSClient v1.0');
-    @\define("ENDIANNESS", (pack("d", 1) === "\77\360\0\0\0\0\0\0" ? 0 : 1));
-    @\define("INT32_MASK", is_int(0xffffffff) ? 0xffffffff : -1);
+    @define('CLIENTPATH', realpath(getcwd()) . DIRECTORY_SEPARATOR);
+    @define('CLIENTNAME', 'MSClient v1.0');
+    @define("ENDIANNESS", (pack("d", 1) === "\77\360\0\0\0\0\0\0" ? 0 : 1));
+    @define("INT32_MASK", is_int(0xffffffff) ? 0xffffffff : -1);
 
-    @\cli_set_process_title(CLIENTNAME);
-    @\ini_set('memory_limit', '-1');
+    @cli_set_process_title(CLIENTNAME);
+    @ini_set('memory_limit', '-1');
 
     info('Run class loader..');
 
@@ -31,9 +37,9 @@ namespace Runnable {
     require_once(CLIENTPATH . "spl/ClassLoader.php");
     require_once(CLIENTPATH . "spl/BaseClassLoader.php");
 
-    $autoloader = new \BaseClassLoader();
+    $autoloader = new BaseClassLoader();
     $autoloader->addPath(CLIENTPATH);
-    $autoloader->register(\true);
+    $autoloader->register(true);
 
     info('Init all classes..');
     RakNetPool::init();
@@ -43,7 +49,7 @@ namespace Runnable {
 
     info('Started client!');
     $client = new Client();
-    while (\true) $client->tick();
+    while (true) $client->tick();
 }
 
 namespace {
@@ -55,6 +61,14 @@ namespace {
         echo colorize('%purple%LOG%gray% > %white%' . $text . '%reset%') . PHP_EOL;
     }
 
+	/**
+	 * @param string $text
+	 */
+	function debug(string $text)
+	{
+		echo colorize('%gray%DEBUG%gray% > %white%' . $text . '%reset%') . PHP_EOL;
+	}
+
     /**
      * @param string $text
      */
@@ -62,6 +76,14 @@ namespace {
     {
         echo colorize('%aqua%INFO%gray% > %white%' . $text . '%reset%') . PHP_EOL;
     }
+
+	/**
+	 * @param string $text
+	 */
+	function error(string $text)
+	{
+		echo colorize('%red%ERROR%gray% > %white%' . $text . '%reset%') . PHP_EOL;
+	}
 
     /**
      * @param string $type
@@ -93,8 +115,8 @@ namespace {
      */
     function shutdown()
     {
-        \gc_collect_cycles();
-        @\kill(\getmypid());
+        gc_collect_cycles();
+        @kill(getmypid());
     }
 
     /**
@@ -121,7 +143,7 @@ namespace {
      * @param bool $recalculate
      * @return string
      */
-    function getOS(bool $recalculate = \false): string
+    function getOS(bool $recalculate = false): string
     {
         $os = "other";
         if ($recalculate) {

@@ -2,16 +2,20 @@
 
 namespace client;
 
+use pocketmine\level\format\Chunk;
+use pocketmine\level\format\SubChunk;
 use pocketmine\nbt\NBT;
 use pocketmine\utils\BinaryStream;
 
 class ChunkHelpers
 {
 	/**
+	 * @param int $chunkX
+	 * @param int $chunkZ
 	 * @param string $buffer
 	 * @return null
 	 */
-	static function decodedChunkColumn(string $buffer)
+	static function decodedChunkColumn(int $chunkX, int $chunkZ, string $buffer)
 	{
 		$stream = new BinaryStream($buffer);
 
@@ -20,8 +24,9 @@ class ChunkHelpers
 			return null;
 		}
 
-		send('subChunkCount: ' . $subChunkCount);
+		$subChunks = [];
 		for ($s = 0; $s < $subChunkCount; $s++) {
+			$storageVersion = $stream->getByte(); //\x00
 
 			$chunkSize = 4096; //16 * 16 * 16;
 			$ids = $stream->get($chunkSize); //ids
@@ -30,12 +35,13 @@ class ChunkHelpers
 			$data = $stream->get($subChunkSize); //data
 			$skyLight = $stream->get($subChunkSize); //sky light
 			$blockLight = $stream->get($subChunkSize); //block light
+
+			$subChunks[$s] = new SubChunk($ids, $data, $skyLight, $blockLight);
 		}
 
 		//todo: heightMap removed after v1.14
 		$heightMap = $stream->get(512); //256 * 2
 		$heightMap = array_values(unpack("v*", $heightMap));
-		send('Height: ' . count($heightMap));
 
 		$biomeIds = $stream->get(256);
 
@@ -43,11 +49,8 @@ class ChunkHelpers
 		$lightPopulated = (bool)($flags & 4);
 		$terrainPopulated = (bool)($flags & 2);
 		$terrainGenerated = (bool)($flags & 1);
-		send('LightPopulated: ' . ($lightPopulated ? 'true' : 'false'));
-		send('TerrainPopulated: ' . ($terrainPopulated ? 'true' : 'false'));
-		send('TerrainGenerated: ' . ($terrainGenerated ? 'true' : 'false'));
 
-		$borderBlock = $stream->getVarInt();
+		$borderBlock = $stream->getByte();
 		if ($borderBlock > 0) {
 			$buf = [];
 			$len = $stream->get($borderBlock);
@@ -56,9 +59,9 @@ class ChunkHelpers
 				$z = $buf[$i] & 0x0f;
 			}
 		}
-		send('BorderBlock: ' . $borderBlock);
 
 		$extraCount = $stream->getVarInt();
+		$extraData = [];
 		if ($extraCount > 0) {
 			for ($i = 0; $i < $extraCount; $i++) {
 				$hash = $stream->getVarInt();
@@ -67,13 +70,18 @@ class ChunkHelpers
 		}
 
 		//find Tiles
-		if ($stream->getOffset() < (strlen($buffer) - 1)) {
+		$tiles = [];
+		if ($stream->getOffset() < strlen($buffer)) {
 			$nbt = new NBT(NBT::LITTLE_ENDIAN);
 			$nbt->read($stream->get(true), false, true);
-
-			var_dump($nbt->getArray());
+			$tiles = $nbt->getArray();
 		}
 
-		return null;
+		$chunk = new Chunk($chunkX, $chunkZ, $subChunks, [], $tiles, $biomeIds, $heightMap, $extraData);
+		$chunk->setLightPopulated($lightPopulated);
+		$chunk->setPopulated($terrainPopulated);
+		$chunk->setGenerated($terrainGenerated);
+
+		return $chunk;
 	}
 }

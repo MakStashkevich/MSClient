@@ -64,6 +64,11 @@ class Bot
 	/** @var bool */
 	public $death = false;
 
+	/** @var Level */
+	public $level;
+	/** @var string */
+	public $levelName = 'world';
+
 	/**
 	 * Bot constructor.
 	 * @param string $username
@@ -77,6 +82,7 @@ class Bot
 		$this->password = $password ?? self::PASSWORD;
 		$this->address = $address ?? new Address('0.0.0.0', 19130);
 		$this->skin = $skin;
+		$this->level = new Level();
 	}
 
 	/**
@@ -143,6 +149,30 @@ class Bot
 	function getId(): int
 	{
 		return $this->id;
+	}
+
+	/**
+	 * @param string $level
+	 */
+	function setLevelName(string $level)
+	{
+		$this->levelName = $level;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	function getLevelName(): string
+	{
+		return $this->levelName;
+	}
+
+	/**
+	 * @return Level
+	 */
+	function getLevel(): Level
+	{
+		return $this->level;
 	}
 
 	/**
