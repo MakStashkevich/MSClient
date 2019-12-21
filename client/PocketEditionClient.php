@@ -795,7 +795,22 @@ class PocketEditionClient extends UDPServerSocket
 			}
 			return;
 		} elseif ($packet instanceof AdventureSettingsPacket) {
-			//todo
+			$player = $this->getPlayer();
+			$player->setAllowFlight((bool)$packet->allowFlight);
+			$player->setFlying((bool)$packet->isFlying);
+
+			$player->setWorldImmutable((bool)$packet->worldImmutable);
+			$player->setWorldBuilder((bool)$packet->worldBuilder);
+
+			$player->setNoPvp((bool)$packet->noPvp);
+			$player->setNoPvm((bool)$packet->noPvm);
+			$player->setNoMvp((bool)$packet->noMvp);
+
+			$player->setAutoJump((bool)$packet->autoJump);
+			$player->setMuted((bool)$packet->muted);
+
+			$player->setFlags((int)$packet->flags);
+			$player->setUserPermission((int)$packet->userPermission);
 			return;
 		} elseif ($packet instanceof PlayerListPacket) {
 			foreach ($packet->entries as $id => $e) {

@@ -70,6 +70,21 @@ class Bot
 	/** @var string */
 	public $levelName = 'world';
 
+	public $worldImmutable = false;
+	public $noPvp = false;
+	public $noPvm = false;
+	public $noMvp = false;
+
+	public $autoJump = true;
+	public $allowFlight = false;
+	public $noClip = false;
+	public $worldBuilder = false;
+	public $isFlying = false;
+	public $muted = false;
+
+	public $flags = 0;
+	public $userPermission = 0;
+
 	/**
 	 * Bot constructor.
 	 * @param string $username
@@ -315,5 +330,197 @@ class Bot
 	function getCapeData()
 	{
 		return isset($this->skin) ? $this->skin->getCapeData() : null;
+	}
+
+	/**
+	 * @param bool $allow
+	 */
+	function setAllowFlight(bool $allow = false)
+	{
+		$this->allowFlight = $allow;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function getAllowFlight(): bool
+	{
+		return $this->allowFlight;
+	}
+
+	/**
+	 * @param bool $allow
+	 */
+	function setFlying(bool $allow = false)
+	{
+		$this->isFlying = $allow;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function getFlying(): bool
+	{
+		return $this->isFlying;
+	}
+
+	/**
+	 * @param bool $allow
+	 */
+	function setWorldImmutable(bool $allow = false)
+	{
+		$this->worldImmutable = $allow;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function getWorldImmutable(): bool
+	{
+		return $this->worldImmutable;
+	}
+
+	/**
+	 * @param bool $allow
+	 */
+	function setNoPvp(bool $allow = false)
+	{
+		$this->noPvp = $allow;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function getNoPvp(): bool
+	{
+		return $this->noPvp;
+	}
+
+	/**
+	 * @param bool $allow
+	 */
+	function setNoPvm(bool $allow = false)
+	{
+		$this->noPvm = $allow;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function getNoPvm(): bool
+	{
+		return $this->noPvm;
+	}
+
+	/**
+	 * @param bool $allow
+	 */
+	function setNoMvp(bool $allow = false)
+	{
+		$this->noMvp = $allow;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function getNoMvp(): bool
+	{
+		return $this->noMvp;
+	}
+
+	/**
+	 * @param bool $allow
+	 */
+	function setAutoJump(bool $allow = false)
+	{
+		$this->autoJump = $allow;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function getAutoJump(): bool
+	{
+		return $this->autoJump;
+	}
+
+	/**
+	 * @param bool $allow
+	 */
+	function setNoClip(bool $allow = false)
+	{
+		$this->noClip = $allow;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function getNoClip(): bool
+	{
+		return $this->noClip;
+	}
+
+	/**
+	 * @param bool $allow
+	 */
+	function setWorldBuilder(bool $allow = false)
+	{
+		$this->worldBuilder = $allow;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function getWorldBuilder(): bool
+	{
+		return $this->worldBuilder;
+	}
+
+	/**
+	 * @param bool $allow
+	 */
+	function setMuted(bool $allow = false)
+	{
+		$this->muted = $allow;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function getMuted(): bool
+	{
+		return $this->muted;
+	}
+
+	/**
+	 * @param int $flags
+	 */
+	function setFlags(int $flags = 0)
+	{
+		$this->flags = $flags;
+	}
+
+	/**
+	 * @return int
+	 */
+	function getFlags(): int
+	{
+		return $this->flags;
+	}
+
+	/**
+	 * @param int $permission
+	 */
+	function setUserPermission(int $permission = 0)
+	{
+		$this->userPermission = $permission;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function getUserPermission(): bool
+	{
+		return $this->userPermission;
 	}
 }
