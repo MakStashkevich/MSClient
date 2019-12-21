@@ -117,7 +117,9 @@ class Bot
 	 */
 	function addPlayersOnline(array $players = [])
 	{
-		array_merge($this->playersOnline, $players);
+		foreach ($players as $uuid => $player) {
+			$this->playersOnline[$uuid] = $player;
+		}
 	}
 
 	/**
