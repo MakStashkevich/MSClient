@@ -6,6 +6,7 @@ use client\entity\EntityHelpers;
 use client\level\Level;
 use pocketmine\entity\Attribute;
 use pocketmine\math\Vector3;
+use pocketmine\utils\UUID;
 
 /**
  * Created by PhpStorm.
@@ -125,7 +126,7 @@ class Bot
 	function removePlayersOnline(array $players = [])
 	{
 		foreach ($players as $uuid) {
-			unset($this->playersOnline[$uuid]);
+			if ($uuid instanceof UUID) unset($this->playersOnline[$uuid->toString()]);
 		}
 	}
 
@@ -590,7 +591,9 @@ class Bot
 	function addMetadata(array $metadata = [])
 	{
 		if ($this->metadata === []) $this->setMetadata($metadata);
-		else $this->metadata = array_merge($this->metadata, $metadata);
+		else foreach ($metadata as $id => $meta) {
+			$this->metadata[$id] = $meta;
+		}
 	}
 
 	/**
@@ -627,20 +630,12 @@ class Bot
 	}
 
 	/**
-	 * @return array
-	 */
-	function getMetadataFlags(): array
-	{
-		return $this->metadata[EntityHelpers::DATA_FLAGS] ?? [];
-	}
-
-	/**
 	 * @param $id
 	 * @return mixed|null
 	 */
 	function getDataProperty(int $id)
 	{
-		$data = $this->getMetadataFlags();
+		$data = $this->getMetadata();
 		return isset($data[$id]) ? $data[$id][1] : null;
 	}
 
@@ -650,7 +645,7 @@ class Bot
 	 */
 	function getDataPropertyType(int $id)
 	{
-		$data = $this->getMetadataFlags();
+		$data = $this->getMetadata();
 		return isset($data[$id]) ? $data[$id][0] : null;
 	}
 
