@@ -19,7 +19,7 @@ class Client
 	/** @var bool */
 	private $stopped = false;
 	/** @var int */
-	private $chatId;
+	private $clientId = 0;
 
 	/**
 	 * Client constructor.
@@ -32,14 +32,14 @@ class Client
 			new Bot(
 				'robotXXXsuper',
 				'sosipisos',
-				new Address('0.0.0.0', 11111),
+				new Address('0.0.0.0', mt_rand(10000, 50000)),
 				new Skin(CLIENTPATH . 'skins/Robot.png')
 			)
 		);
 
 		$this->list[] = $client;
 		if (count($this->list) < 2) {
-			$this->chatId = 0;
+			$this->clientId = 0;
 			$this->console = new Console($this, true);
 		} else $this->console = new Console($this);
 	}
@@ -78,28 +78,37 @@ class Client
 	 */
 	function chat(string $mess)
 	{
-		if (isset($this->chatId)) {
-			/** @var PocketEditionClient $bot */
-			$bot = $this->list[$this->chatId];
-			$bot->sendMessage($mess);
-		} else info('Для использования чата необходимо выбрать бота! Команда: chat start id');
+		$client = $this->getPocketClient();
+		if ($client !== false) $client->sendMessage($mess);
 	}
 
 	/**
 	 * @param int $id
 	 * @return bool
 	 */
-	function setChatId(int $id): bool
+	function setClientId(int $id): bool
 	{
 		if (isset($this->list[$id])) {
-			$this->chatId = $id;
+			$this->clientId = $id;
 			return true;
 		}
 		return false;
 	}
 
-	function removeChatId()
+	/**
+	 * @return bool|PocketEditionClient
+	 */
+	function getPocketClient()
 	{
-		if (isset($this->chatId)) unset($this->chatId);
+		if (isset($this->chatId) && isset($this->list[$this->clientId])) {
+			return $this->list[$this->clientId];
+		}
+		info('Use this command to connect on bot: connect {id}');
+		return false;
+	}
+
+	function removeClientId()
+	{
+		if (isset($this->clientId)) unset($this->clientId);
 	}
 }

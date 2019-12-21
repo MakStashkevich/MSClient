@@ -6,7 +6,6 @@ namespace client;
 
 use client\utils\PlayerLocation;
 use Exception;
-use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\AddPlayerPacket;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
@@ -800,11 +799,11 @@ class PocketEditionClient extends UDPServerSocket
 			}
 			return;
 		} elseif ($packet instanceof EntityEventPacket) {
-			if (($seek = $this->player->seekId) > 0 && $packet->event == EntityEventPacket::HURT_ANIMATION) {
+			/*if (($seek = $this->player->seekId) > 0 && $packet->event == EntityEventPacket::HURT_ANIMATION) {
 				$this->damage = 100;
-			}
+			}*/
 		} elseif ($packet instanceof MoveEntityPacket) {
-			if (($id = $packet->entityRuntimeId) < 666) {
+			/*if (($id = $packet->entityRuntimeId) < 666) {
 				$loc = $this->player->getPosition();
 				$x = $packet->x;
 				$y = $packet->y;
@@ -819,7 +818,7 @@ class PocketEditionClient extends UDPServerSocket
 								$npc->getPosition(),
 								new Vector3($x, $y, $z)
 							);
-//							$pos->setComponents($x, $y, $z);
+							$pos->setComponents($x, $y, $z);
 							$this->move($pos);
 						} else {
 							$this->player->seekId = 0;
@@ -829,7 +828,7 @@ class PocketEditionClient extends UDPServerSocket
 				} else {
 					if ($distance) $this->player->seekId = $id;
 				}
-			}
+			}*/
 			return;
 		}
 
