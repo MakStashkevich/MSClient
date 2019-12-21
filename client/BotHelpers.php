@@ -5,9 +5,9 @@ namespace client;
 use client\utils\PlayerLocation;
 use pocketmine\item\Item;
 use pocketmine\math\Vector3;
+use pocketmine\network\mcpe\protocol\MovePlayerPacket;
 use protocol\ContainerSetSlotPacket;
 use protocol\MobEquipmentPacket;
-use protocol\MovePlayerPacket;
 use protocol\PlayerActionPacket;
 use protocol\UseItemPacket;
 
@@ -141,7 +141,9 @@ class BotHelpers
 		$lookAtPos = self::lookAt($originalPosition->add(0, 1.62), $targetPosition);
 		$move = new MovePlayerPacket();
 		$move->entityRuntimeId = $player->getId();
-		$move->position = $lookAtPos->asVector3();
+		$move->x = $lookAtPos->getX();
+		$move->y = $lookAtPos->getY();
+		$move->z = $lookAtPos->getZ();
 		$move->yaw = $lookAtPos->getYaw();
 		$move->bodyYaw = $lookAtPos->getHeadYaw();
 		$move->pitch = $lookAtPos->getPitch();
@@ -163,7 +165,9 @@ class BotHelpers
 
 				$move = new MovePlayerPacket();
 				$move->entityRuntimeId = $player->getId();
-				$move->position = $currentPosition->asVector3();
+				$move->x = $lookAtPos->getX();
+				$move->y = $lookAtPos->getY();
+				$move->z = $lookAtPos->getZ();
 				$move->yaw = $lookAtPos->getYaw();
 				$move->bodyYaw = $lookAtPos->getHeadYaw();
 				$move->pitch = $lookAtPos->getPitch();
@@ -176,7 +180,9 @@ class BotHelpers
 
 				$move = new MovePlayerPacket();
 				$move->entityRuntimeId = $player->getId();
-				$move->position = $currentPosition->asVector3();
+				$move->x = $lookAtPos->getX();
+				$move->y = $lookAtPos->getY();
+				$move->z = $lookAtPos->getZ();
 				$move->yaw = $lookAtPos->getYaw();
 				$move->bodyYaw = $lookAtPos->getHeadYaw();
 				$move->pitch = $lookAtPos->getPitch();
