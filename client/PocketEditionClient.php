@@ -42,6 +42,7 @@ use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\network\mcpe\protocol\UpdateAttributesPacket;
 use pocketmine\utils\TextFormat;
+use pocketmine\utils\UUID;
 use protocol\AddEntityPacket;
 use protocol\AddItemEntityPacket;
 use protocol\BlockEventPacket;
@@ -831,6 +832,8 @@ class PocketEditionClient extends UDPServerSocket
 				foreach ($packet->entries as $entry) {
 					if (isset($entry[0], $entry[1])) { //uuid & unique id
 						$uuid = $entry[0];
+						if (!$uuid instanceof UUID) continue;
+						$uuid = $uuid->toString();
 						$entries[$uuid] = [
 							'id' => (int)$entry[1] ?? 0,
 							'username' => $entry[2] ?? 'Unknown',
