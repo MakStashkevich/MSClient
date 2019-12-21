@@ -68,15 +68,15 @@ class Console
 				$client = $this->client->getPocketClient();
 				if ($client === false) break;
 				if (!isset($args[1]) || !is_numeric($args[1])) {
-					info('Вы не указали X');
+					info('U don\'t write X');
 					break;
 				}
 				if (!isset($args[2]) || !is_numeric($args[2])) {
-					info('Вы не указали Y');
+					info('U don\'t write Y');
 					break;
 				}
 				if (!isset($args[3]) || !is_numeric($args[3])) {
-					info('Вы не указали Z');
+					info('U don\'t write Z');
 					break;
 				}
 				BotHelpers::moveTo($client, new Vector3($args[1], $args[2], $args[3]));

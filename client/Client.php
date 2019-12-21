@@ -100,7 +100,7 @@ class Client
 	 */
 	function getPocketClient()
 	{
-		if (isset($this->chatId) && isset($this->list[$this->clientId])) {
+		if (isset($this->clientId) && isset($this->list[$this->clientId])) {
 			return $this->list[$this->clientId];
 		}
 		info('Use this command to connect on bot: connect {id}');
