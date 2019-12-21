@@ -79,7 +79,16 @@ class Console
 					info('U don\'t write Z');
 					break;
 				}
-				BotHelpers::moveTo($client, new Vector3($args[1], $args[2], $args[3]));
+				BotHelpers::moveTo($client, new Vector3((float)$args[1], (float)$args[2], (float)$args[3]));
+				break;
+			case 'up':
+				$client = $this->client->getPocketClient();
+				if ($client === false) break;
+				if (!isset($args[1]) || !is_numeric($args[1])) {
+					info('U don\'t write UP coords');
+					break;
+				}
+				BotHelpers::moveTo($client, $client->getPlayer()->getPosition()->add(0, (float)$args[1]));
 				break;
 			default:
 				if ($this->chat) $this->client->chat($command);

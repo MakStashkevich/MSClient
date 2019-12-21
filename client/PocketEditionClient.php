@@ -147,6 +147,9 @@ class PocketEditionClient extends UDPServerSocket
 	/** @var int */
 	private $damage = 0;
 
+	/** @var int */
+	private $loadRequest = 0;
+
 	/**
 	 * PocketEditionClient constructor.
 	 * @param Address $serverAddress
@@ -345,6 +348,8 @@ class PocketEditionClient extends UDPServerSocket
 		$pk->serverAddress = $this->serverAddress;
 		$pk->skin = $this->player->getSkinData();
 		$this->sendDataPacket($pk);
+
+		$this->loadRequest = microtime(true) + 10.0;
 	}
 
 	/**
@@ -406,7 +411,9 @@ class PocketEditionClient extends UDPServerSocket
 	public function tick(): bool
 	{
 		if (!$this->disconnect) {
-			if (!$this->sendConnection) {
+			if ($this->loadRequest > 0 && $this->loadRequest < microtime(true)) {
+				return false; //disconnect
+			} elseif (!$this->sendConnection) {
 				$this->sendOpenConnectionRequest1();
 			} elseif ($this->sendLogin > 0 && $this->sendLogin < microtime(true)) {
 				$this->sendLoginPacket();
@@ -518,9 +525,9 @@ class PocketEditionClient extends UDPServerSocket
 
 	protected function handlePacket(Packet $packet): void
 	{
-		if (!$packet instanceof Datagram) {
+		/*if (!$packet instanceof Datagram) {
 			send('handlePacket ' . $this->getClassName($packet));
-		}
+		}*/
 		if ($packet instanceof Datagram) {
 			$this->handleDatagram($packet);
 		} elseif ($packet instanceof ACK) {
@@ -724,7 +731,7 @@ class PocketEditionClient extends UDPServerSocket
 		}
 		if ($packet instanceof PlayStatusPacket) {
 			if ($packet->status === PlayStatusPacket::PLAYER_SPAWN) {
-				//todo
+				$this->loadRequest = 0;
 			}
 		} elseif ($packet instanceof RespawnPacket) {
 			//todo
