@@ -25,7 +25,7 @@ class Level
 	 */
 	function isChunk(int $chunkX, int $chunkZ)
 	{
-		return isset($this->chunks[$chunkX], $this->chunks[$chunkX][$chunkZ]);
+		return isset($this->chunks[LevelHelpers::chunkHash($chunkX, $chunkZ)]);
 	}
 
 	/**
@@ -35,7 +35,8 @@ class Level
 	 */
 	function getChunk(int $chunkX, int $chunkZ): ?Chunk
 	{
-		return $this->isChunk($chunkX, $chunkZ) ? $this->chunks[$chunkX][$chunkZ] : null;
+		$hash = LevelHelpers::chunkHash($chunkX, $chunkZ);
+		return isset($this->chunks[$hash]) ? $this->chunks[$hash] : null;
 	}
 
 	/**
@@ -47,8 +48,8 @@ class Level
 		$chunkX = $chunk->getX();
 		$chunkZ = $chunk->getZ();
 		if ($this->isChunk($chunkX, $chunkZ)) return false;
-		if (!isset($this->chunks[$chunkX])) $this->chunks[$chunkX] = [];
-		$this->chunks[$chunkX][$chunkZ] = $chunk;
+		$hash = LevelHelpers::chunkHash($chunkX, $chunkZ);
+		$this->chunks[$hash] = $chunk;
 		return true;
 	}
 

@@ -90,6 +90,11 @@ class Console
 				}
 				BotHelpers::moveTo($client, $client->getPlayer()->getPosition()->add(0, (float)$args[1]));
 				break;
+
+			case 'test':
+				var_dump($this->client->getPocketClient()->getPlayer()->getLevel()->getChests());
+				break;
+
 			default:
 				if ($this->chat) $this->client->chat($command);
 				break;
