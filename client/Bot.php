@@ -2,6 +2,7 @@
 
 namespace client;
 
+use client\level\Level;
 use pocketmine\entity\Attribute;
 use pocketmine\math\Vector3;
 

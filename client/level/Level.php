@@ -1,9 +1,9 @@
 <?php
 
-namespace client;
+namespace client\level;
 
-use pocketmine\level\format\Chunk;
-use pocketmine\tile\Tile;
+use client\level\chunk\Chunk;
+use client\nbt\ChestNbt;
 
 class Level
 {
@@ -99,15 +99,15 @@ class Level
 	/**
 	 * @return array
 	 */
-	function getTiles(): array
+	function getChests(): array
 	{
 		$tiles = [];
 		$chunks = $this->chunks;
 		foreach ($chunks as $chunk) {
 			if ($chunk instanceof Chunk) {
-				$t = $chunk->getTiles();
-				foreach ($t as $tile) {
-					$tiles[] = $tile;
+				$chests = $chunk->getChests();
+				foreach ($chests as $chest) {
+					$tiles[] = $chest;
 				}
 			}
 		}
@@ -115,15 +115,15 @@ class Level
 	}
 
 	/**
-	 * @param float $x
-	 * @param float $y
-	 * @param float $z
-	 * @return Tile|null
+	 * @param int $x
+	 * @param int $y
+	 * @param int $z
+	 * @return ChestNbt|null
 	 */
-	function getTile(float $x, float $y, float $z): ?Tile
+	function getChest(int $x, int $y, int $z): ?ChestNbt
 	{
 		if (!$this->isChunk($chunkX = $x >> 4, $chunkZ = $z >> 4)) return null;
 		$chunk = $this->getChunk($chunkX, $chunkZ);
-		return $chunk->getTile($x, $y, $z);
+		return $chunk->getChest($x, $y, $z);
 	}
 }

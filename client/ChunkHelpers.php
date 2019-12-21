@@ -2,9 +2,11 @@
 
 namespace client;
 
-use pocketmine\level\format\Chunk;
+use client\level\chunk\Chunk;
+use client\nbt\ChestNbt;
 use pocketmine\level\format\SubChunk;
 use pocketmine\nbt\NBT;
+use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\utils\BinaryStream;
 
 class ChunkHelpers
@@ -66,18 +68,29 @@ class ChunkHelpers
 			for ($i = 0; $i < $extraCount; $i++) {
 				$hash = $stream->getVarInt();
 				$blockData = $stream->getLShort();
+				//todo
 			}
 		}
 
-		//find Tiles
-		$tiles = [];
+		//find chests
+		$chests = [];
 		if ($stream->getOffset() < strlen($buffer)) {
 			$nbt = new NBT(NBT::LITTLE_ENDIAN);
 			$nbt->read($stream->get(true), false, true);
-			$tiles = $nbt->getArray();
+			$data = $nbt->getData();
+			if ($data instanceof CompoundTag) {
+				if ($data->offsetExists('id')) {
+					$id = $data->offsetGet('id');
+					if ($id === 'Chest') {
+						$chests[] = new ChestNbt($data);
+					}
+				}
+			}
+			return null;
 		}
 
-		$chunk = new Chunk($chunkX, $chunkZ, $subChunks, [], $tiles, $biomeIds, $heightMap, $extraData);
+		$chunk = new Chunk($chunkX, $chunkZ, $subChunks, [], [], $biomeIds, $heightMap, $extraData);
+		$chunk->setChests($chests);
 		$chunk->setLightPopulated($lightPopulated);
 		$chunk->setPopulated($terrainPopulated);
 		$chunk->setGenerated($terrainGenerated);
