@@ -61,6 +61,7 @@ class Level
 	 */
 	function getBlockIdAt(float $x, float $y, float $z): int
 	{
+		$this->blockToInteger($x, $y, $z);
 		if ($this->isChunk($chunkX = $x >> 4, $chunkZ = $z >> 4)) {
 			$chunk = $this->getChunk($chunkX, $chunkZ);
 			return $chunk->getBlockId($x, $y, $z);
@@ -72,10 +73,23 @@ class Level
 	 * @param float $x
 	 * @param float $y
 	 * @param float $z
+	 */
+	function blockToInteger(float &$x, float &$y, float &$z)
+	{
+		$x = (int)$x;
+		$y = (int)$y;
+		$z = (int)$z;
+	}
+
+	/**
+	 * @param float $x
+	 * @param float $y
+	 * @param float $z
 	 * @return int
 	 */
 	function getBlockDataAt(float $x, float $y, float $z): int
 	{
+		$this->blockToInteger($x, $y, $z);
 		if ($this->isChunk($chunkX = $x >> 4, $chunkZ = $z >> 4)) {
 			$chunk = $this->getChunk($chunkX, $chunkZ);
 			return $chunk->getBlockData($x, $y, $z);
@@ -90,6 +104,7 @@ class Level
 	 */
 	function getHighestBlockAt(float $x, float $z): int
 	{
+		$this->blockToInteger($x, $y, $z);
 		if ($this->isChunk($chunkX = $x >> 4, $chunkZ = $z >> 4)) {
 			$chunk = $this->getChunk($chunkX, $chunkZ);
 			return $chunk->getHighestBlockAt($x, $z);
