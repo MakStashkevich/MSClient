@@ -141,9 +141,9 @@ class BotHelpers
 		$lookAtPos = self::lookAt($originalPosition->add(0, 1.62), $targetPosition);
 		$move = new MovePlayerPacket();
 		$move->entityRuntimeId = $player->getId();
-		$move->x = $lookAtPos->getX();
-		$move->y = $lookAtPos->getY();
-		$move->z = $lookAtPos->getZ();
+		$move->x = $originalPosition->getX();
+		$move->y = $originalPosition->getY();
+		$move->z = $originalPosition->getZ();
 		$move->yaw = $lookAtPos->getYaw();
 		$move->bodyYaw = $lookAtPos->getHeadYaw();
 		$move->pitch = $lookAtPos->getPitch();
@@ -165,9 +165,9 @@ class BotHelpers
 
 				$move = new MovePlayerPacket();
 				$move->entityRuntimeId = $player->getId();
-				$move->x = $lookAtPos->getX();
-				$move->y = $lookAtPos->getY();
-				$move->z = $lookAtPos->getZ();
+				$move->x = $currentPosition->getX();
+				$move->y = $currentPosition->getY();
+				$move->z = $currentPosition->getZ();
 				$move->yaw = $lookAtPos->getYaw();
 				$move->bodyYaw = $lookAtPos->getHeadYaw();
 				$move->pitch = $lookAtPos->getPitch();
@@ -180,9 +180,9 @@ class BotHelpers
 
 				$move = new MovePlayerPacket();
 				$move->entityRuntimeId = $player->getId();
-				$move->x = $lookAtPos->getX();
-				$move->y = $lookAtPos->getY();
-				$move->z = $lookAtPos->getZ();
+				$move->x = $currentPosition->getX();
+				$move->y = $currentPosition->getY();
+				$move->z = $currentPosition->getZ();
 				$move->yaw = $lookAtPos->getYaw();
 				$move->bodyYaw = $lookAtPos->getHeadYaw();
 				$move->pitch = $lookAtPos->getPitch();
