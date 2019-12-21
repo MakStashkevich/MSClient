@@ -787,7 +787,11 @@ class PocketEditionClient extends UDPServerSocket
 			$pk = new RequestChunkRadiusPacket();
 			$pk->radius = 8;
 			$this->sendDataPacket($pk);
-			$this->player->setLocation($packet->x, $packet->y, $packet->z, $packet->yaw, $packet->pitch);
+
+			$player = $this->getPlayer();
+			$player->setId($packet->entityRuntimeId);
+			$player->setGamemode($packet->playerGamemode);
+			$player->setLocation($packet->x, $packet->y, $packet->z, $packet->yaw, $packet->pitch);
 		} elseif ($packet instanceof UpdateAttributesPacket) {
 			$player = $this->player;
 			if ($player->getId() === $packet->entityRuntimeId) {
@@ -812,12 +816,18 @@ class PocketEditionClient extends UDPServerSocket
 			$player->setFlags((int)$packet->flags);
 			$player->setUserPermission((int)$packet->userPermission);
 			return;
+		} elseif ($packet instanceof SetEntityDataPacket) {
+			$id = $packet->entityRuntimeId;
+			$player = $this->getPlayer();
+			if ($id === $player->getId()) {
+				$player->addMetadata((array)$packet->metadata);
+			}
+			return;
 		} elseif ($packet instanceof PlayerListPacket) {
-			foreach ($packet->entries as $id => $e) {
-				if (isset($e[2]) && $e[2] === $this->player->getName()) {
-					$this->player->setId((int)$e[1]);
-					return;
-				}
+			if ($packet->type === PlayerListPacket::TYPE_ADD) {
+				$this->getPlayer()->addPlayersOnline($packet->entries);
+			} else {
+				$this->getPlayer()->removePlayersOnline($packet->entries);
 			}
 			return;
 		} elseif ($packet instanceof FullChunkDataPacket) {
@@ -873,7 +883,7 @@ class PocketEditionClient extends UDPServerSocket
 			PlayerListPacket::NETWORK_ID, SetEntityDataPacket::NETWORK_ID, AddPlayerPacket::NETWORK_ID,
 			RemoveEntityPacket::NETWORK_ID, MovePlayerPacket::NETWORK_ID, MoveEntityPacket::NETWORK_ID,
 			LevelSoundEventPacket::NETWORK_ID, PlayerActionPacket::NETWORK_ID, InventoryActionPacket::NETWORK_ID,
-			EntityEventPacket::NETWORK_ID, SetEntityDataPacket::NETWORK_ID, AnimatePacket::NETWORK_ID,
+			EntityEventPacket::NETWORK_ID, AnimatePacket::NETWORK_ID,
 			SetEntityMotionPacket::NETWORK_ID, LevelEventPacket::NETWORK_ID, UpdateBlockPacket::NETWORK_ID,
 			MobArmorEquipmentPacket::NETWORK_ID, AddItemEntityPacket::NETWORK_ID, BlockEventPacket::NETWORK_ID,
 			SetEntityLinkPacket::NETWORK_ID, MobEquipmentPacket::NETWORK_ID, AddEntityPacket::NETWORK_ID,

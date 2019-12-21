@@ -2,6 +2,7 @@
 
 namespace client;
 
+use client\entity\EntityHelpers;
 use client\level\Level;
 use pocketmine\entity\Attribute;
 use pocketmine\math\Vector3;
@@ -85,6 +86,15 @@ class Bot
 	public $flags = 0;
 	public $userPermission = 0;
 
+	/** @var array */
+	public $metadata = [];
+
+	/** @var int */
+	public $gamemode = 0;
+
+	/** @var array */
+	public $playersOnline = [];
+
 	/**
 	 * Bot constructor.
 	 * @param string $username
@@ -99,6 +109,46 @@ class Bot
 		$this->address = $address ?? new Address('0.0.0.0', 19130);
 		$this->skin = $skin;
 		$this->level = new Level();
+	}
+
+	/**
+	 * @param array $players
+	 */
+	function addPlayersOnline(array $players = [])
+	{
+		array_merge($this->playersOnline, $players);
+	}
+
+	/**
+	 * @param array $players
+	 */
+	function removePlayersOnline(array $players = [])
+	{
+		//todo
+	}
+
+	/**
+	 * @return array
+	 */
+	function getPlayersOnline(): array
+	{
+		return $this->playersOnline;
+	}
+
+	/**
+	 * @param int $mode
+	 */
+	function setGamemode(int $mode)
+	{
+		$this->gamemode = $mode;
+	}
+
+	/**
+	 * @return int
+	 */
+	function getGamemode(): int
+	{
+		return $this->gamemode;
 	}
 
 	/**
@@ -517,10 +567,199 @@ class Bot
 	}
 
 	/**
-	 * @return bool
+	 * @return int
 	 */
-	function getUserPermission(): bool
+	function getUserPermission(): int
 	{
 		return $this->userPermission;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function isOp(): bool
+	{
+		return $this->getUserPermission() === 1;
+	}
+
+	/**
+	 * @param array $metadata
+	 */
+	function addMetadata(array $metadata = [])
+	{
+		if ($this->metadata === []) $this->setMetadata($metadata);
+		else $this->metadata = array_merge($this->metadata, $metadata);
+	}
+
+	/**
+	 * @param int $id
+	 */
+	function removeMetadata(int $id)
+	{
+		unset($this->metadata[$id]);
+	}
+
+	/**
+	 * @param array $metadata
+	 */
+	function setMetadata(array $metadata = [])
+	{
+		$this->metadata = $metadata;
+	}
+
+	/**
+	 * @return array
+	 */
+	function getMetadata(): array
+	{
+		return $this->metadata;
+	}
+
+	/**
+	 * @param int $id
+	 * @return bool
+	 */
+	function hasMetadata(int $id): bool
+	{
+		return isset($this->metadata[$id]);
+	}
+
+	/**
+	 * @return array
+	 */
+	function getMetadataFlags(): array
+	{
+		return $this->metadata[EntityHelpers::DATA_FLAGS] ?? [];
+	}
+
+	/**
+	 * @param $id
+	 * @return mixed|null
+	 */
+	function getDataProperty(int $id)
+	{
+		$data = $this->getMetadataFlags();
+		return isset($data[$id]) ? $data[$id][1] : null;
+	}
+
+	/**
+	 * @param $id
+	 * @return mixed|null
+	 */
+	function getDataPropertyType(int $id)
+	{
+		$data = $this->getMetadataFlags();
+		return isset($data[$id]) ? $data[$id][0] : null;
+	}
+
+	/**
+	 * @param $propertyId
+	 * @param $id
+	 * @return bool
+	 */
+	function getDataFlag(int $propertyId, int $id): bool
+	{
+		return (((int)$this->getDataProperty($propertyId)) & (1 << $id)) > 0;
+	}
+
+	/**
+	 * @return bool
+	 */
+	function isImmobile(): bool
+	{
+		return $this->getDataFlag(EntityHelpers::DATA_FLAGS, EntityHelpers::DATA_FLAG_IMMOBILE);
+	}
+
+	/**
+	 * @return bool
+	 */
+	function isGliding(): bool
+	{
+		return $this->getDataFlag(EntityHelpers::DATA_FLAGS, EntityHelpers::DATA_FLAG_GLIDING);
+	}
+
+	/**
+	 * @return bool
+	 */
+	function isSprinting(): bool
+	{
+		return $this->getDataFlag(EntityHelpers::DATA_FLAGS, EntityHelpers::DATA_FLAG_SPRINTING);
+	}
+
+	/**
+	 * @return bool
+	 */
+	function isSneaking(): bool
+	{
+		return $this->getDataFlag(EntityHelpers::DATA_FLAGS, EntityHelpers::DATA_FLAG_SNEAKING);
+	}
+
+	/**
+	 * @return float
+	 */
+	function getScale(): float
+	{
+		return (float)$this->getDataProperty(EntityHelpers::DATA_SCALE);
+	}
+
+	/**
+	 * @return string
+	 */
+	function getNameTag(): string
+	{
+		return $this->getDataProperty(EntityHelpers::DATA_NAMETAG);
+	}
+
+	/**
+	 * @return bool
+	 */
+	function isNameTagVisible(): bool
+	{
+		return $this->getDataFlag(EntityHelpers::DATA_FLAGS, EntityHelpers::DATA_FLAG_CAN_SHOW_NAMETAG);
+	}
+
+	/**
+	 * @return bool
+	 */
+	function isNameTagAlwaysVisible(): bool
+	{
+		return $this->getDataFlag(EntityHelpers::DATA_FLAGS, EntityHelpers::DATA_FLAG_ALWAYS_SHOW_NAMETAG);
+	}
+
+	/**
+	 * Returns whether the entity is able to climb blocks such as ladders or vines.
+	 * @return bool
+	 */
+	function canClimb(): bool
+	{
+		return $this->getDataFlag(EntityHelpers::DATA_FLAGS, EntityHelpers::DATA_FLAG_CAN_CLIMB);
+	}
+
+	/**
+	 * Returns whether this entity is climbing a block. By default this is only true if the entity is climbing a ladder or vine or similar block.
+	 *
+	 * @return bool
+	 */
+	function canClimbWalls(): bool
+	{
+		return $this->getDataFlag(EntityHelpers::DATA_FLAGS, EntityHelpers::DATA_FLAG_WALLCLIMBING);
+	}
+
+	/**
+	 * Returns the entity ID of the owning entity, or null if the entity doesn't have an owner.
+	 * @return int|string|null
+	 */
+	function getOwningEntityId()
+	{
+		return $this->getDataProperty(EntityHelpers::DATA_OWNER_EID);
+	}
+
+	/**
+	 * Returns the entity ID of the entity's target, or null if it doesn't have a target.
+	 * @return int|string|null
+	 */
+	function getTargetEntityId()
+	{
+		return $this->getDataProperty(EntityHelpers::DATA_TARGET_EID);
 	}
 }
