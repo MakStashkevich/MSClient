@@ -65,6 +65,8 @@ class Console
 				$this->chat = false;
 				break;
 			case 'move':
+				$client = $this->client->getPocketClient();
+				if ($client === false) break;
 				if (!isset($args[1]) || !is_numeric($args[1])) {
 					info('Вы не указали X');
 					break;
@@ -77,7 +79,7 @@ class Console
 					info('Вы не указали Z');
 					break;
 				}
-				BotHelpers::moveTo($this->client->getPocketClient(), new Vector3($args[1], $args[2], $args[3]));
+				BotHelpers::moveTo($client, new Vector3($args[1], $args[2], $args[3]));
 				break;
 			default:
 				if ($this->chat) $this->client->chat($command);
