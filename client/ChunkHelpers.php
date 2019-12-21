@@ -86,7 +86,6 @@ class ChunkHelpers
 					}
 				}
 			}
-			return null;
 		}
 
 		$chunk = new Chunk($chunkX, $chunkZ, $subChunks, [], [], $biomeIds, $heightMap, $extraData);
