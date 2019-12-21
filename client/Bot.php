@@ -124,7 +124,9 @@ class Bot
 	 */
 	function removePlayersOnline(array $players = [])
 	{
-		//todo
+		foreach ($players as $uuid) {
+			unset($this->playersOnline[$uuid]);
+		}
 	}
 
 	/**

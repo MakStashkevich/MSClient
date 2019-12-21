@@ -824,8 +824,22 @@ class PocketEditionClient extends UDPServerSocket
 			}
 			return;
 		} elseif ($packet instanceof PlayerListPacket) {
+			if (!isset($packet->entries) || !is_array($packet->entries)) return;
+
 			if ($packet->type === PlayerListPacket::TYPE_ADD) {
-				$this->getPlayer()->addPlayersOnline($packet->entries);
+				$entries = [];
+				foreach ($packet->entries as $entry) {
+					if (isset($entry[0], $entry[1])) { //uuid & unique id
+						$uuid = $entry[0];
+						$entries[$uuid] = [
+							'id' => (int)$entry[1] ?? 0,
+							'username' => $entry[2] ?? 'Unknown',
+							'skinId' => $entry[3] ?? 'Standard_Custom',
+							'skinData' => $entry[4] ?? '',
+						];
+					}
+				}
+				$this->getPlayer()->addPlayersOnline($entries);
 			} else {
 				$this->getPlayer()->removePlayersOnline($packet->entries);
 			}
