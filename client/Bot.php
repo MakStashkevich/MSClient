@@ -96,6 +96,16 @@ class Bot
 	}
 
 	/**
+	 * @param Vector3 $position
+	 */
+	function setPosition(Vector3 $position)
+	{
+		$this->x = $position->x;
+		$this->y = $position->y;
+		$this->z = $position->z;
+	}
+
+	/**
 	 * @return Vector3
 	 */
 	function getPosition(): Vector3

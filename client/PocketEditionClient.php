@@ -779,7 +779,7 @@ class PocketEditionClient extends UDPServerSocket
 			$this->sendDataPacket($pk);
 		} elseif ($packet instanceof StartGamePacket) {
 			$pk = new RequestChunkRadiusPacket();
-			$pk->radius = 16;
+			$pk->radius = 8;
 			$this->sendDataPacket($pk);
 			$this->player->setLocation($packet->x, $packet->y, $packet->z, $packet->yaw, $packet->pitch);
 		} elseif ($packet instanceof UpdateAttributesPacket) {
