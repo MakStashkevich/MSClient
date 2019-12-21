@@ -3,6 +3,7 @@
 namespace client;
 
 use pocketmine\level\format\Chunk;
+use pocketmine\tile\Tile;
 
 class Level
 {
@@ -93,5 +94,36 @@ class Level
 			return $chunk->getHighestBlockAt($x, $z);
 		}
 		return 0;
+	}
+
+	/**
+	 * @return array
+	 */
+	function getTiles(): array
+	{
+		$tiles = [];
+		$chunks = $this->chunks;
+		foreach ($chunks as $chunk) {
+			if ($chunk instanceof Chunk) {
+				$t = $chunk->getTiles();
+				foreach ($t as $tile) {
+					$tiles[] = $tile;
+				}
+			}
+		}
+		return $tiles;
+	}
+
+	/**
+	 * @param float $x
+	 * @param float $y
+	 * @param float $z
+	 * @return Tile|null
+	 */
+	function getTile(float $x, float $y, float $z): ?Tile
+	{
+		if (!$this->isChunk($chunkX = $x >> 4, $chunkZ = $z >> 4)) return null;
+		$chunk = $this->getChunk($chunkX, $chunkZ);
+		return $chunk->getTile($x, $y, $z);
 	}
 }
