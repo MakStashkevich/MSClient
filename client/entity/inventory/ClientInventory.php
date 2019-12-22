@@ -70,6 +70,21 @@ class ClientInventory
 	}
 
 	/**
+	 * @param int $slot
+	 * @param Item $item
+	 * @return bool
+	 */
+	function saveSlot(int $slot, Item $item): bool
+	{
+		if (!isset($this->slots[$slot])) {
+			error('U can\'t save slot = ' . $slot . ' on saveSlot()');
+			return false;
+		}
+		$this->slots[$slot] = $item;
+		return true;
+	}
+
+	/**
 	 * @return InventoryType
 	 */
 	function getType(): InventoryType

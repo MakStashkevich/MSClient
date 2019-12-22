@@ -7,6 +7,7 @@ namespace client;
 use client\entity\inventory\utils\ContainerIds;
 use client\utils\PlayerLocation;
 use Exception;
+use pocketmine\item\Item;
 use pocketmine\network\mcpe\protocol\AddPlayerPacket;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
@@ -747,15 +748,30 @@ class PocketEditionClient extends UDPServerSocket
 						$player->getArmor()->setAll($slots);
 						break;
 					default:
-						mess('CONTAINER_ID', $packet->windowid);
+						mess('CONTENT_CONTAINER_ID', $packet->windowid);
 						break;
 				}
 			}
 			return;
 		} elseif ($packet instanceof ContainerSetSlotPacket) {
-			//todo
+			$player = $this->getPlayer();
+			$slot = $packet->slot;
+			$item = $packet->item;
+			if (!$item instanceof Item) return;
+			switch ($packet->windowid) {
+				case ContainerIds::INVENTORY:
+					$player->getInventory()->saveSlot($slot, $item);
+					break;
+				case ContainerIds::ARMOR:
+					$player->getArmor()->saveSlot($slot, $item);
+					break;
+				default:
+					mess('SLOT_CONTAINER_ID', $packet->windowid);
+					break;
+			}
+			return;
 		} elseif ($packet instanceof ContainerSetDataPacket) {
-			//todo
+			//furnace change icons
 		} elseif ($packet instanceof RespawnPacket) {
 			//todo
 		} elseif ($packet instanceof DisconnectPacket) {
