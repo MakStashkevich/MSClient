@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace client;
 
+use client\entity\inventory\utils\ContainerIds;
 use client\utils\PlayerLocation;
 use Exception;
 use pocketmine\network\mcpe\protocol\AddPlayerPacket;
@@ -734,6 +735,27 @@ class PocketEditionClient extends UDPServerSocket
 			if ($packet->status === PlayStatusPacket::PLAYER_SPAWN) {
 				$this->loadRequest = 0;
 			}
+		} elseif ($packet instanceof ContainerSetContentPacket) {
+			$player = $this->getPlayer();
+			if ($packet->targetEid === $player->getId()) {
+				switch ($packet->windowid) {
+					case ContainerIds::INVENTORY:
+						$slots = $packet->slots;
+						//todo: add slots to cache
+						break;
+					case ContainerIds::ARMOR:
+						//????
+						break;
+					default:
+						mess('CONTAINER_ID', $packet->windowid);
+						break;
+				}
+			}
+			return;
+		} elseif ($packet instanceof ContainerSetSlotPacket) {
+			//todo
+		} elseif ($packet instanceof ContainerSetDataPacket) {
+			//todo
 		} elseif ($packet instanceof RespawnPacket) {
 			//todo
 		} elseif ($packet instanceof DisconnectPacket) {
@@ -851,8 +873,6 @@ class PocketEditionClient extends UDPServerSocket
 			$chunkX = $packet->chunkX;
 			$chunkZ = $packet->chunkZ;
 			$data = $packet->data;
-			//mess('CHUNK_DATA', 'X: ' . $chunkX . ' Z: ' . $chunkZ . ' Size: ' . strlen($data));
-
 			try {
 				$chunk = ChunkHelpers::decodedChunkColumn($chunkX, $chunkZ, $data);
 				if (!isset($chunk)) return;
