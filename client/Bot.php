@@ -3,6 +3,7 @@
 namespace client;
 
 use client\entity\EntityHelpers;
+use client\entity\inventory\PlayerInventory;
 use client\level\Level;
 use pocketmine\entity\Attribute;
 use pocketmine\math\Vector3;
@@ -96,6 +97,9 @@ class Bot
 	/** @var array */
 	public $playersOnline = [];
 
+	/** @var PlayerInventory */
+	private $inventory;
+
 	/**
 	 * Bot constructor.
 	 * @param string $username
@@ -110,6 +114,15 @@ class Bot
 		$this->address = $address ?? new Address('0.0.0.0', 19130);
 		$this->skin = $skin;
 		$this->level = new Level();
+		$this->inventory = new PlayerInventory();
+	}
+
+	/**
+	 * @return PlayerInventory
+	 */
+	function getInventory(): PlayerInventory
+	{
+		return $this->inventory;
 	}
 
 	/**

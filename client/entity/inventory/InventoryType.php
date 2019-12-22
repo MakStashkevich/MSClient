@@ -6,6 +6,10 @@ use client\entity\inventory\utils\WindowTypes;
 
 class InventoryType
 {
+	/** @var int */
+	const DEFAULT = -1;
+
+	/** @var int */
 	const CHEST = 0;
 	const DOUBLE_CHEST = 1;
 	const PLAYER = 2;
@@ -36,7 +40,7 @@ class InventoryType
 	 */
 	public static function get($index)
 	{
-		return static::$default[$index] ?? null;
+		return static::$default[$index] ?? static::$default[self::DEFAULT];
 	}
 
 	public static function init()
@@ -46,6 +50,8 @@ class InventoryType
 		}
 		
 		static::$default = [
+			static::DEFAULT => new InventoryType(0, 'Default', WindowTypes::CONTAINER),
+
 			static::CHEST => new InventoryType(27, 'Chest', WindowTypes::CONTAINER),
 			static::DOUBLE_CHEST => new InventoryType(27 + 27, 'Double Chest', WindowTypes::CONTAINER),
 			static::PLAYER => new InventoryType(36 + 4, 'Player', WindowTypes::INVENTORY), //36 CONTAINER, 4 ARMOR

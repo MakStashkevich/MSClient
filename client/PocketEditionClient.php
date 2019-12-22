@@ -728,7 +728,7 @@ class PocketEditionClient extends UDPServerSocket
 		try {
 			$packet->decode();
 		} catch (Throwable $e) {
-			echo "Error in decode " . $class . PHP_EOL . $e->getMessage() . PHP_EOL;
+			error('Error in decode ' . $class . PHP_EOL . $e->getMessage());
 			return;
 		}
 		if ($packet instanceof PlayStatusPacket) {
@@ -738,10 +738,10 @@ class PocketEditionClient extends UDPServerSocket
 		} elseif ($packet instanceof ContainerSetContentPacket) {
 			$player = $this->getPlayer();
 			if ($packet->targetEid === $player->getId()) {
+				$slots = $packet->slots;
 				switch ($packet->windowid) {
 					case ContainerIds::INVENTORY:
-						$slots = $packet->slots;
-						//todo: add slots to cache
+						$player->getInventory()->setAll($slots);
 						break;
 					case ContainerIds::ARMOR:
 						//????
