@@ -55,7 +55,7 @@ class InventoryType
 
 			static::CHEST => new InventoryType(27, 'Chest', WindowTypes::CONTAINER),
 			static::DOUBLE_CHEST => new InventoryType(27 + 27, 'Double Chest', WindowTypes::CONTAINER),
-			static::PLAYER => new InventoryType(36, 'Player', WindowTypes::INVENTORY), //36 CONTAINER
+			static::PLAYER => new InventoryType(36 + 9, 'Player', WindowTypes::INVENTORY), //36 CONTAINER, 9 HOTBAR
 			static::ARMOR => new InventoryType(4, 'Armor', WindowTypes::INVENTORY), //4 ARMOR
 			static::CRAFTING => new InventoryType(5, 'Crafting', WindowTypes::INVENTORY), //yes, the use of INVENTORY is intended! 4 CRAFTING slots, 1 RESULT
 			static::WORKBENCH => new InventoryType(10, 'Crafting', WindowTypes::WORKBENCH), //9 CRAFTING slots, 1 RESULT

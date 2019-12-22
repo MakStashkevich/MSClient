@@ -27,7 +27,7 @@ class ClientInventory
 	{
 		$max = $this->getMax();
 		foreach ($slots as $slot => $item) {
-			if ($slot <= $max && $slot >= 0) {
+			if ($slot < $max && $slot >= 0) {
 				$this->slots[$slot] = $item;
 			}
 		}
@@ -39,8 +39,9 @@ class ClientInventory
 	function setAll(array $slots = [])
 	{
 		$max = $this->getMax();
-		if (count($slots) !== $max) {
-			error('U need give ' . $max . ' slots to setAll()');
+		$count = count($slots);
+		if ($count !== $max) {
+			error('U need give ' . $max . ' slots to setAll() not ' . $count);
 			return;
 		}
 		$this->slots = $slots;
