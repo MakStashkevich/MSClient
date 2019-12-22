@@ -134,6 +134,10 @@ class BotHelpers
 	static function moveTo(PocketEditionClient $client, Vector3 $target): bool
 	{
 		$player = $client->getPlayer();
+
+		//check immobile player
+		if ($player->isImmobile()) return false;
+
 		$originalPosition = $client->getPlayer()->getPosition();
 		$targetPosition = $target;
 
