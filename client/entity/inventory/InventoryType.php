@@ -13,13 +13,14 @@ class InventoryType
 	const CHEST = 0;
 	const DOUBLE_CHEST = 1;
 	const PLAYER = 2;
-	const FURNACE = 3;
-	const CRAFTING = 4;
-	const WORKBENCH = 5;
-	const STONE_CUTTER = 6;
-	const BREWING_STAND = 7;
-	const ANVIL = 8;
-	const ENCHANT_TABLE = 9;
+	const ARMOR = 3;
+	const FURNACE = 4;
+	const CRAFTING = 5;
+	const WORKBENCH = 6;
+	const STONE_CUTTER = 7;
+	const BREWING_STAND = 8;
+	const ANVIL = 9;
+	const ENCHANT_TABLE = 10;
 
 	const PLAYER_FLOATING = 254;
 
@@ -50,11 +51,12 @@ class InventoryType
 		}
 		
 		static::$default = [
-			static::DEFAULT => new InventoryType(0, 'Default', WindowTypes::CONTAINER),
+			static::DEFAULT => new InventoryType(0, 'Default', null),
 
 			static::CHEST => new InventoryType(27, 'Chest', WindowTypes::CONTAINER),
 			static::DOUBLE_CHEST => new InventoryType(27 + 27, 'Double Chest', WindowTypes::CONTAINER),
-			static::PLAYER => new InventoryType(36 + 4, 'Player', WindowTypes::INVENTORY), //36 CONTAINER, 4 ARMOR
+			static::PLAYER => new InventoryType(36, 'Player', WindowTypes::INVENTORY), //36 CONTAINER
+			static::ARMOR => new InventoryType(4, 'Armor', WindowTypes::INVENTORY), //4 ARMOR
 			static::CRAFTING => new InventoryType(5, 'Crafting', WindowTypes::INVENTORY), //yes, the use of INVENTORY is intended! 4 CRAFTING slots, 1 RESULT
 			static::WORKBENCH => new InventoryType(10, 'Crafting', WindowTypes::WORKBENCH), //9 CRAFTING slots, 1 RESULT
 			static::FURNACE => new InventoryType(3, 'Furnace', WindowTypes::FURNACE), //2 INPUT, 1 OUTPUT

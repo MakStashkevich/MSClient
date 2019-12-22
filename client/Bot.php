@@ -3,6 +3,7 @@
 namespace client;
 
 use client\entity\EntityHelpers;
+use client\entity\inventory\ArmorInventory;
 use client\entity\inventory\PlayerInventory;
 use client\level\Level;
 use pocketmine\entity\Attribute;
@@ -99,6 +100,8 @@ class Bot
 
 	/** @var PlayerInventory */
 	private $inventory;
+	/** @var ArmorInventory */
+	private $armor;
 
 	/**
 	 * Bot constructor.
@@ -115,6 +118,7 @@ class Bot
 		$this->skin = $skin;
 		$this->level = new Level();
 		$this->inventory = new PlayerInventory();
+		$this->armor = new ArmorInventory();
 	}
 
 	/**
@@ -123,6 +127,14 @@ class Bot
 	function getInventory(): PlayerInventory
 	{
 		return $this->inventory;
+	}
+
+	/**
+	 * @return ArmorInventory
+	 */
+	function getArmor(): ArmorInventory
+	{
+		return $this->armor;
 	}
 
 	/**
