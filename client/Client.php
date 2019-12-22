@@ -8,6 +8,7 @@
 
 namespace client;
 
+use client\entity\inventory\InventoryType;
 use console\Console;
 
 class Client
@@ -26,6 +27,10 @@ class Client
 	 */
 	function __construct()
 	{
+		//init all
+		InventoryType::init();
+
+		//add client
 		$client = new PocketEditionClient(
             new Address('dragonw.ru', 19999),
 //        new Address('bmpe.pw', 19134),

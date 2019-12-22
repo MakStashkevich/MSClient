@@ -740,11 +740,9 @@ class PocketEditionClient extends UDPServerSocket
 			if ($packet->targetEid === $player->getId()) {
 				$slots = $packet->slots;
 				switch ($packet->windowid) {
-					case ContainerIds::INVENTORY:
-						$player->getInventory()->setAll($slots);
-						break;
 					case ContainerIds::ARMOR:
-						//????
+					case ContainerIds::INVENTORY:
+						$player->getInventory()->addItems($slots);
 						break;
 					default:
 						mess('CONTAINER_ID', $packet->windowid);

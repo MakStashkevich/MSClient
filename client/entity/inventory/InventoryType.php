@@ -7,7 +7,7 @@ use client\entity\inventory\utils\WindowTypes;
 class InventoryType
 {
 	/** @var int */
-	const DEFAULT = 666;
+	const DEFAULT = -1;
 
 	/** @var int */
 	const CHEST = 0;

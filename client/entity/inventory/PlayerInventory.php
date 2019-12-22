@@ -23,6 +23,16 @@ class PlayerInventory
 	/**
 	 * @param array $slots
 	 */
+	function addItems(array $slots = [])
+	{
+		foreach ($slots as $slot => $item) {
+			$this->slots[$slot] = $item;
+		}
+	}
+
+	/**
+	 * @param array $slots
+	 */
 	function setAll(array $slots = [])
 	{
 		$max = $this->getMax();
