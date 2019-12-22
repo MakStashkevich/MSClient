@@ -7,7 +7,7 @@ use client\entity\inventory\utils\WindowTypes;
 class InventoryType
 {
 	/** @var int */
-	const DEFAULT = -1;
+	const DEFAULT = 666;
 
 	/** @var int */
 	const CHEST = 0;
@@ -36,9 +36,9 @@ class InventoryType
 	/**
 	 * @param $index
 	 *
-	 * @return InventoryType|null
+	 * @return InventoryType
 	 */
-	public static function get($index)
+	public static function get(int $index = self::DEFAULT)
 	{
 		return static::$default[$index] ?? static::$default[self::DEFAULT];
 	}
