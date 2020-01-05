@@ -32,7 +32,8 @@ class Client
 
 		//add client
 		$client = new PocketEditionClient(
-            new Address('dragonw.ru', 19999),
+			new Address('pigcraft.ru', 19133),
+//            new Address('dragonw.ru', 19999),
 //        new Address('bmpe.pw', 19134),
 			new Bot(
 				'robotXXXsuper',

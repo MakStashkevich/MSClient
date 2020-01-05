@@ -747,8 +747,9 @@ class PocketEditionClient extends UDPServerSocket
 					case ContainerIds::ARMOR:
 						$player->getArmor()->setAll($slots);
 						break;
+					case ContainerIds::CREATIVE:
 					default:
-						mess('CONTENT_CONTAINER_ID', $packet->windowid);
+						mess('CONTENT_CONTAINER_ID', (string)$packet->windowid);
 						break;
 				}
 			}
