@@ -25,6 +25,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 #include <rules/DataPacket.h>
 
+use client\Client;
 use pocketmine\network\mcpe\NetworkSession;
 
 class AvailableCommandsPacket extends DataPacket{
@@ -34,6 +35,11 @@ class AvailableCommandsPacket extends DataPacket{
 	public $unknown = "";
 
 	public function decodePayload(){
+		if (Client::STEADFAST2) {
+			// https://github.com/Hydreon/Steadfast2/blob/7b5775cb60edeedf1b91a62d1faef514fda13e22/src/pocketmine/network/protocol/AvailableCommandsPacket.php#L40
+			$this->commands = $this->getString();
+			return; // unknown not send!
+		}
 		$this->commands = $this->getString();
 		$this->unknown = $this->getString();
 	}

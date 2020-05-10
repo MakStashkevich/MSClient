@@ -27,6 +27,10 @@ namespace Runnable {
     @cli_set_process_title(CLIENTNAME);
     @ini_set('memory_limit', '-1');
 
+	assert_options(ASSERT_ACTIVE, 1);
+	assert_options(ASSERT_WARNING, 1);
+	assert_options(ASSERT_QUIET_EVAL, 1);
+
     info('Run class loader..');
 
     if (!is_file(CLIENTPATH . "spl/ClassLoader.php")) {
@@ -98,11 +102,16 @@ namespace {
     /**
      * @param string $text
      * @return mixed|string
+	 *
+	 * https://en.wikipedia.org/wiki/ANSI_escape_code
+	 * ESC[ 38:5:⟨n⟩ m - Select foreground color
+	 * ESC[ 48:5:⟨n⟩ m - Select background color
      */
     function colorize(string $text)
     {
         $text = str_replace('%aqua%', "\e[38;5;87m", $text);
         $text = str_replace('%white%', "\x1b[38;5;231m", $text);
+        $text = str_replace('%red%', "\x1b[38;5;9m", $text);
         $text = str_replace('%reset%', "\x1b[m", $text);
         $text = str_replace('%gray%', "\x1b[38;5;145m", $text);
         $text = str_replace('%purple%', "\x1b[38;5;127m", $text);

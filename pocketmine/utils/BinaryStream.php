@@ -96,7 +96,6 @@ class BinaryStream{
 		$this->buffer .= ($v ? "\x01" : "\x00");
 	}
 
-
 	public function getByte() : int{
 		return ord($this->buffer{$this->offset++});
 	}
@@ -112,6 +111,20 @@ class BinaryStream{
 
 	public function getSignedShort() : int{
 		return Binary::readSignedShort($this->get(2));
+	}
+
+	public function putSignedVarInt($v) {
+		$this->put(Binary::writeSignedVarInt($v));
+	}
+
+	public function getSignedVarInt() {
+		$result = $this->getVarInt();
+		if ($result % 2 == 0) {
+			$result = $result / 2;
+		} else {
+			$result = (-1) * ($result + 1) / 2;
+		}
+		return $result;
 	}
 
 	public function putShort(int $v){

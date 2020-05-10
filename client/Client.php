@@ -22,6 +22,17 @@ class Client
 	/** @var int */
 	private $clientId = 0;
 
+	/** @var bool */
+	const STEADFAST2 = true;
+
+	/** @var bool */
+	const DISABLE_TIP = true;
+
+	/** @var bool */
+	const DEBUG_PACKETS_RAKLIB = false;
+	const DEBUG_PACKETS_PE = false;
+	const DEBUG_PACKETS_PE_ALL = false;
+
 	/**
 	 * Client constructor.
 	 */
@@ -32,9 +43,14 @@ class Client
 
 		//add client
 		$client = new PocketEditionClient(
-			new Address('pigcraft.ru', 19133),
-//            new Address('dragonw.ru', 19999),
-//        new Address('bmpe.pw', 19134),
+			new Server('bombacraft.ru', 19133, 0),
+
+//			new Server('54.38.216.98', 19132, 1),
+//			new Server('54.38.216.98', 17132, 1),
+//			new Server('54.38.216.98', 12008, 1),
+
+//            new Server('dragonw.ru', 19133),
+//			new Server('bmpe.pw', 19134),
 			new Bot(
 				'robotXXXsuper',
 				'sosipisos',
@@ -43,6 +59,7 @@ class Client
 			)
 		);
 
+		info('Bots loaded..');
 		$this->list[] = $client;
 		if (count($this->list) < 2) {
 			$this->clientId = 0;
@@ -56,7 +73,7 @@ class Client
 		$this->console->tick();
 		/** @var PocketEditionClient $bot */
 		foreach ($this->list as &$bot) {
-			if ($bot->tick() == false) { //Disconnect
+			if ($bot->tick() == false) { // Disconnect
 				info('Client disconnect...');
 				$params = $bot->getParams();
 				$bot->quit();
@@ -64,6 +81,11 @@ class Client
 				info('Client reconnected!');
 			}
 		}
+	}
+
+	function __destruct()
+	{
+		$this->stop();
 	}
 
 	function stop()
@@ -85,7 +107,13 @@ class Client
 	function chat(string $mess)
 	{
 		$client = $this->getPocketClient();
-		if ($client !== false) $client->sendMessage($mess);
+		if ($client !== false) {
+			if ($mess === 'bug') {
+				$client->sendBug();
+				return;
+			}
+			$client->sendMessage($mess);
+		}
 	}
 
 	/**

@@ -40,6 +40,8 @@ class ResourcePacksInfoPacket extends DataPacket{
 	public $resourcePackEntries = [];
 
 	public function decodePayload(){
+		// reset??
+
 		/*$this->mustAccept = $this->getBool();
 		$behaviorPackCount = $this->getLShort();
 		while($behaviorPackCount-- > 0){

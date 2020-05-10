@@ -27,6 +27,9 @@ declare(strict_types=1);
 namespace pocketmine\utils;
 
 
+use InvalidArgumentException;
+use UnexpectedValueException;
+
 class Binary{
 	const BIG_ENDIAN = 0x00;
 	const LITTLE_ENDIAN = 0x01;
@@ -67,7 +70,6 @@ class Binary{
 	public static function flipLongEndianness(int $value) : int{
 		return self::readLLong(self::writeLong($value));
 	}
-
 
 	private static function checkLength($str, $expect){
 		assert(($len = strlen($str)) === $expect, "Expected $expect bytes, got $len");
@@ -242,6 +244,9 @@ class Binary{
 	 * @return int
 	 */
 	public static function readInt(string $str) : int{
+//		if (strlen($str)) {
+//			var_dump((new \Exception())->getTraceAsString());
+//		}
 		self::checkLength($str, 4);
 		return self::signInt(unpack("N", $str)[1]);
 	}
@@ -451,6 +456,15 @@ class Binary{
 		return $temp ^ ($raw & (1 << 63));
 	}
 
+	static function writeSignedVarInt($v){
+		if ($v >= 0) {
+			$v = 2 * $v;
+		} else {
+			$v = 2 * abs($v) - 1;
+		}
+		return self::writeVarInt($v);
+	}
+
 	/**
 	 * Reads a 32-bit variable-length unsigned integer.
 	 *
@@ -459,22 +473,26 @@ class Binary{
 	 *
 	 * @return int
 	 *
-	 * @throws \InvalidArgumentException if the var-int did not end after 5 bytes
+	 * @throws InvalidArgumentException if the var-int did not end after 5 bytes
 	 */
 	public static function readUnsignedVarInt(string $buffer, int &$offset) : int{
 		$value = 0;
 		for($i = 0; $i <= 35; $i += 7){
-			$b = ord($buffer{$offset++});
+			if(!isset($buffer[$offset])){
+//				var_dump((new \Exception())->getTraceAsString());
+				throw new UnexpectedValueException("No bytes left in buffer");
+			}
+			$b = ord($buffer[$offset++]);
 			$value |= (($b & 0x7f) << $i);
 
 			if(($b & 0x80) === 0){
 				return $value;
 			}elseif(!isset($buffer{$offset})){
-				throw new \UnexpectedValueException("Expected more bytes, none left to read");
+				throw new UnexpectedValueException("Expected more bytes, none left to read");
 			}
 		}
 
-		throw new \InvalidArgumentException("VarInt did not terminate after 5 bytes!");
+		throw new InvalidArgumentException("VarInt did not terminate after 5 bytes!");
 	}
 
 	/**
@@ -508,7 +526,7 @@ class Binary{
 			$value = (($value >> 7) & (PHP_INT_MAX >> 6)); //PHP really needs a logical right-shift operator
 		}
 
-		throw new \InvalidArgumentException("Value too large to be encoded as a VarInt");
+		throw new InvalidArgumentException("Value too large to be encoded as a VarInt");
 	}
 
 
@@ -543,11 +561,11 @@ class Binary{
 			if(($b & 0x80) === 0){
 				return $value;
 			}elseif(!isset($buffer{$offset})){
-				throw new \UnexpectedValueException("Expected more bytes, none left to read");
+				throw new UnexpectedValueException("Expected more bytes, none left to read");
 			}
 		}
 
-		throw new \InvalidArgumentException("VarLong did not terminate after 10 bytes!");
+		throw new InvalidArgumentException("VarLong did not terminate after 10 bytes!");
 	}
 
 	/**
@@ -579,6 +597,6 @@ class Binary{
 			$value = (($value >> 7) & (PHP_INT_MAX >> 6)); //PHP really needs a logical right-shift operator
 		}
 
-		throw new \InvalidArgumentException("Value too large to be encoded as a VarLong");
+		throw new InvalidArgumentException("Value too large to be encoded as a VarLong");
 	}
 }

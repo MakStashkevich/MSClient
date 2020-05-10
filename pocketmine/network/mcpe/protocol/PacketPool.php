@@ -23,12 +23,14 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe\protocol;
 
+use SplFixedArray;
+
 class PacketPool{
-	/** @var \SplFixedArray<DataPacket> */
+	/** @var SplFixedArray<DataPacket> */
 	protected static $pool = null;
 
 	public static function init(){
-		static::$pool = new \SplFixedArray(256);
+		static::$pool = new SplFixedArray(256);
 
 		//Normal packets
 		static::registerPacket(new LoginPacket());
@@ -148,7 +150,13 @@ class PacketPool{
 	 * @return DataPacket
 	 */
 	public static function getPacket(string $buffer) : DataPacket{
-		$pk = static::getPacketById(ord($buffer{0}));
+		if (!isset($buffer{0})) {
+			error('Not found packetId; use UnknownPacket');
+			return new UnknownPacket();
+		}
+
+		$id = ord($buffer{0});
+		$pk = static::getPacketById($id);
 		$pk->setBuffer($buffer);
 
 		return $pk;
