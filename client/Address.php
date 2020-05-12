@@ -8,7 +8,6 @@ use raklib\utils\InternetAddress;
 
 class Address extends InternetAddress
 {
-
     /**
      * Address constructor.
      * @param string $address

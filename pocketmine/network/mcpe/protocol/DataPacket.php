@@ -31,6 +31,8 @@ use pocketmine\item\Item;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\utils\BinaryStream;
 use pocketmine\utils\Utils;
+use ReflectionClass;
+use UnexpectedValueException;
 
 
 abstract class DataPacket extends BinaryStream{
@@ -44,7 +46,7 @@ abstract class DataPacket extends BinaryStream{
 	}
 
 	public function getName() : string{
-		return (new \ReflectionClass($this))->getShortName();
+		return (new ReflectionClass($this))->getShortName();
 	}
 
 	public function canBeBatched() : bool{
@@ -57,6 +59,17 @@ abstract class DataPacket extends BinaryStream{
 
 	public function mustBeDecoded() : bool{
 		return true;
+	}
+
+	function encodeHeaderSF2()
+	{
+		$this->putByte($this->pid());
+	}
+
+	function decodeHeaderSF2()
+	{
+		// https://github.com/Hydreon/Steadfast2/blob/91d45ed02736c748d01fd8814281fb64c283039e/src/pocketmine/network/protocol/PEPacket.php#L26
+		$this->getByte(); // packetID
 	}
 
 	public function decode(){
@@ -233,7 +246,7 @@ abstract class DataPacket extends BinaryStream{
 	 * Reads a list of Attributes from the stream.
 	 * @return Attribute[]
 	 *
-	 * @throws \UnexpectedValueException if reading an attribute with an unrecognized name
+	 * @throws UnexpectedValueException if reading an attribute with an unrecognized name
 	 */
 	public function getAttributeList() : array{
 		$list = [];
@@ -255,7 +268,7 @@ abstract class DataPacket extends BinaryStream{
 
 				$list[] = $attr;
 			}else{
-				throw new \UnexpectedValueException("Unknown attribute type \"$name\"");
+				throw new UnexpectedValueException("Unknown attribute type \"$name\"");
 			}
 		}
 

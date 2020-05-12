@@ -341,6 +341,32 @@ class BinaryStream{
 	}
 
 	/**
+	 * @return float|int
+	 */
+	function getSignedVarIntSF2() {
+		$result = $this->getVarIntSF2();
+		if ($result % 2 == 0) {
+			$result = $result / 2;
+		} else {
+			$result = (-1) * ($result + 1) / 2;
+		}
+		return $result;
+	}
+
+	/**
+	 * @return int
+	 */
+	function getVarIntSF2() {
+		$result = $shift = 0;
+		do {
+			$byte = $this->getByte();
+			$result |= ($byte & 0x7f) << $shift;
+			$shift += 7;
+		} while ($byte > 0x7f);
+		return $result;
+	}
+
+	/**
 	 * Writes a 32-bit zigzag-encoded variable-length integer to the end of the buffer.
 	 * @param int $v
 	 */

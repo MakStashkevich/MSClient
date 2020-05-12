@@ -507,6 +507,25 @@ class Binary{
 	}
 
 	/**
+	 * @param $v
+	 * @return mixed|string
+	 */
+	static function writeVarIntSF2($v){
+		if ($v < 0x80) {
+			return chr($v);
+		} else {
+			$values = array();
+			while ($v > 0) {
+				$values[] = 0x80 | ($v & 0x7f);
+				$v = $v >> 7;
+			}
+			$values[count($values)-1] &= 0x7f;
+			$bytes = call_user_func_array('pack', array_merge(array('C*'), $values));
+			return $bytes;
+		}
+	}
+
+	/**
 	 * Writes a 32-bit unsigned integer as a variable-length integer.
 	 *
 	 * @param int $value

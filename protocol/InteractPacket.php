@@ -6,6 +6,8 @@ declare(strict_types=1);
 namespace protocol;
 
 
+use client\Client;
+
 class InteractPacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::INTERACT_PACKET;
 
@@ -25,6 +27,13 @@ class InteractPacket extends DataPacket{
 	}
 
 	function encodePayload() : void{
+		if (Client::STEADFAST2) {
+			// todo: not work
+//			$this->encodeHeaderSF2();
+			$this->putByte($this->action);
+			$this->putVarInt($this->action);
+			return;
+		}
 		$this->putByte($this->action);
 		$this->putEntityRuntimeId($this->target);
 	}

@@ -8,6 +8,7 @@ use client\entity\inventory\utils\ContainerIds;
 use client\utils\PlayerLocation;
 use Exception;
 use pocketmine\item\Item;
+use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\AddPlayerPacket;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
@@ -50,6 +51,7 @@ use pocketmine\utils\UUID;
 use protocol\AddEntityPacket;
 use protocol\AddItemEntityPacket;
 use protocol\BlockEventPacket;
+use protocol\CommandStepPacket;
 use protocol\InteractPacket;
 use protocol\LoginPacket;
 use protocol\MobArmorEquipmentPacket;
@@ -152,6 +154,8 @@ class PocketEditionClient extends UDPServerSocket
 
 	/** @var int */
 	private $damage = 0;
+	/** @var int */
+	private $damageAll = 0;
 
 	/** @var int */
 	private $loadRequest = 0;
@@ -165,6 +169,9 @@ class PocketEditionClient extends UDPServerSocket
 	/** @var bool */
 	private $isRegister = false;
 
+	/** @var bool */
+	private $seekFromPlayer = false;
+
 	/**
 	 * PocketEditionClient constructor.
 	 * @param Server $server
@@ -177,7 +184,7 @@ class PocketEditionClient extends UDPServerSocket
 		$serverAddress = $server->getAddress();
 		$this->register = $server->getRegister();
 
-		$this->params = [$serverAddress, $bot];
+		$this->params = [$server, $bot];
 		$this->player = $bot;
 		$this->serverAddress = $serverAddress;
 
@@ -189,6 +196,26 @@ class PocketEditionClient extends UDPServerSocket
 
 		$this->receiveOrderedIndex = array_fill(0, self::CHANNEL_COUNT, 0);
 		$this->receiveSequencedHighestIndex = array_fill(0, self::CHANNEL_COUNT, 0);
+	}
+
+	/**
+	 * @param bool $value
+	 */
+	function seekFromPlayer(bool $value = true)
+	{
+		$this->seekFromPlayer = $value;
+
+		if (!$value) {
+			$this->player->seekId = 0;
+		}
+	}
+
+	/**
+	 * @param int $damage
+	 */
+	function damageAll(int $damage = 10)
+	{
+		$this->damageAll = $damage;
 	}
 
 	function sendBug()
@@ -218,39 +245,48 @@ class PocketEditionClient extends UDPServerSocket
 		info('Bug finish');
 	}
 
-	/**
-	 * @return int
-	 */
-	function getId(): int
+	protected function sendRawData(string $buffer): void
 	{
-		return $this->player->getId();
-	}
-
-	/**
-	 * @return array
-	 */
-	function getParams(): array
-	{
-		return $this->params;
-	}
-
-	function quit()
-	{
-		$pk = new DisconnectionNotification();
-		$this->sendSessionRakNetPacket($pk);
-		unset($this->socket);
-	}
-
-	protected function sendSessionRakNetPacket(Packet $packet): void
-	{
-		$packet->encode();
-		/*if(!$packet instanceof Datagram){
-			send('sendSessionRakNetPacket ' . $this->getClassName($packet));
-		}*/
 		$encapsulated = new EncapsulatedPacket();
-		$encapsulated->reliability = PacketReliability::UNRELIABLE;
-		$encapsulated->buffer = $packet->buffer;
-		$this->sendDatagramWithEncapsulated($encapsulated);
+		$encapsulated->reliability = PacketReliability::RELIABLE_ORDERED;
+		$encapsulated->buffer = "\xfe" . $buffer;
+		$this->sendEncapsulated($encapsulated);
+	}
+
+	protected function sendEncapsulated(EncapsulatedPacket $packet): void
+	{
+		if (PacketReliability::isOrdered($packet->reliability)) {
+			$packet->orderIndex = $this->orderIndex++;
+		}
+
+		$maxSize = self::MTU - 60;
+		if (strlen($packet->buffer) > $maxSize) {
+			$buffers = str_split($packet->buffer, $maxSize);
+			$bufferCount = count($buffers);
+			$splitID = ++$this->splitID % 65536;
+
+			foreach ($buffers as $count => $buffer) {
+				$pk = new EncapsulatedPacket();
+				$pk->splitID = $splitID;
+				$pk->hasSplit = true;
+				$pk->splitCount = $bufferCount;
+				$pk->reliability = $packet->reliability;
+				$pk->splitIndex = $count;
+				$pk->buffer = $buffer;
+				if (PacketReliability::isReliable($pk->reliability)) {
+					$pk->messageIndex = $this->messageIndex++;
+				}
+				$pk->sequenceIndex = $packet->sequenceIndex;
+				$pk->orderChannel = 0;
+				$pk->orderIndex = $packet->orderIndex;
+				$this->sendDatagramWithEncapsulated($pk);
+			}
+		} else {
+			if (PacketReliability::isReliable($packet->reliability)) {
+				$packet->messageIndex = $this->messageIndex++;
+			}
+			$this->sendDatagramWithEncapsulated($packet);
+		}
 	}
 
 	protected function sendDatagramWithEncapsulated(EncapsulatedPacket $packet): void
@@ -276,24 +312,41 @@ class PocketEditionClient extends UDPServerSocket
 	}
 
 	/**
-	 * @param PlayerLocation $loc
-	 * @param bool $onGround
+	 * @return int
 	 */
-	function move(PlayerLocation $loc, bool $onGround = true)
+	function getId(): int
 	{
-		$pk = new MovePlayerPacket();
-		$pk->entityRuntimeId = $this->player->getId();
-		$pk->x = $this->player->x = $loc->getX();
-		$pk->y = $this->player->y = $loc->getY();
-		$pk->z = $this->player->z = $loc->getZ();
-		$pk->yaw = $this->player->yaw = $loc->getYaw();
-		$pk->bodyYaw = $loc->getHeadYaw();
-		$pk->pitch = $this->player->pitch = $loc->getPitch();
-		$pk->onGround = $onGround;
-		$this->sendDataPacket($pk);
+		return $this->player->getId();
+	}
+
+	/**
+	 * @return array
+	 */
+	function getParams(): array
+	{
+		return $this->params;
+	}
+
+	function quit()
+	{
+		$pk = new DisconnectionNotification();
+		$this->sendSessionRakNetPacket($pk);
+		unset($this->socket);
 	}
 
 	//
+
+	protected function sendSessionRakNetPacket(Packet $packet): void
+	{
+		$packet->encode();
+		/*if(!$packet instanceof Datagram){
+			send('sendSessionRakNetPacket ' . $this->getClassName($packet));
+		}*/
+		$encapsulated = new EncapsulatedPacket();
+		$encapsulated->reliability = PacketReliability::UNRELIABLE;
+		$encapsulated->buffer = $packet->buffer;
+		$this->sendDatagramWithEncapsulated($encapsulated);
+	}
 
 	public function tick(): bool
 	{
@@ -308,21 +361,27 @@ class PocketEditionClient extends UDPServerSocket
 				$this->sendLogin = 0;
 			} else {
 				if ($this->damageTime > 0) {
-					$this->damageTime--;
+					$this->damageTime--; // load for next damage
 				} else {
 					if ($this->damage > 0 && ($id = $this->player->seekId) > 0) {
 						$this->damage($id);
-						$angry = [
-							'Ты будешь уничтожен!',
-							'Я тебя не прощу!',
-							'Конец света скоро наступит!',
-							'Я не остановлюсь и убью тебя!',
-							'Тебе и твоим друзьям конец!',
-							'Я буду преследовать тебя вечно!',
-						];
-//                        $this->sendMessage($angry[array_rand($angry)]);
 						$this->damage--;
-						$this->damageTime = 10000; //33000;
+						$this->damageTime = 10000; // 33000;
+					}
+
+					if ($this->damageAll > 0) {
+						$players = $this->player->getPlayersOnline();
+						foreach ($players as $player) {
+							$eid = (int)abs($player['id'] ?? 0);
+							if ($eid > 0) {
+								$this->damage($eid);
+							}
+						}
+
+						$this->damageAll--;
+						$this->damageTime = 30000;
+
+						send('DamageAll: ' . $this->damageAll);
 					}
 				}
 			}
@@ -377,7 +436,7 @@ class PocketEditionClient extends UDPServerSocket
 	function damage(int $eid)
 	{
 		$pk = new InteractPacket();
-		$pk->action = InteractPacket::ACTION_LEFT_CLICK;
+		$pk->action = InteractPacket::ACTION_LEFT_CLICK; // ACTION_DAMAGE on SF2
 		$pk->target = $eid;
 		$this->sendDataPacket($pk);
 	}
@@ -412,7 +471,7 @@ class PocketEditionClient extends UDPServerSocket
 		} elseif ($packet instanceof ConnectionRequestAccepted) {
 			$address = $packet->address;
 			if ($address instanceof InternetAddress) {
-				info('Raklib connected to ip: ' . $address->ip . ' port: ' . $address->port . ' v' . $address->version);
+				info('Raklib connected on ip: ' . $address->ip . ' port: ' . $address->port . ' (v' . $address->version . ')');
 			}
 			$this->sendNewIncomingConnection();
 			$this->sendLogin = microtime(true) + (mt_rand(24, 80) * 0.001);
@@ -519,6 +578,8 @@ class PocketEditionClient extends UDPServerSocket
 		}
 	}
 
+	//
+
 	/**
 	 * Processes a split part of an encapsulated packet.
 	 * @param EncapsulatedPacket $packet
@@ -565,8 +626,6 @@ class PocketEditionClient extends UDPServerSocket
 
 		return null;
 	}
-
-	//
 
 	private function handleEncapsulatedPacketRoute(EncapsulatedPacket $packet): void
 	{
@@ -692,9 +751,29 @@ class PocketEditionClient extends UDPServerSocket
 			return;
 		} elseif ($packet instanceof ResourcePacksInfoPacket && !$this->isLoggedIn) {
 			$this->isLoggedIn = true;
+
 			$pk = new ResourcePackClientResponsePacket();
 			$pk->status = ResourcePackClientResponsePacket::STATUS_COMPLETED;
 			$this->sendDataPacket($pk);
+
+			/*$stream = new BinaryStream();
+
+			$stream->putByte(0x08);
+			$stream->putByte(4);
+
+			$count = 586244;
+			$stream->putLShort($count);
+			$str = str_repeat("\x00", $count);
+			for ($i = 0; $i < 100; $i++) {
+				$stream->putString($str);
+			}
+
+			$uncompressed = $stream->buffer;
+			$stream->reset();
+			$stream->putString($uncompressed);
+
+			$batchBuffer = zlib_encode($stream->buffer, ZLIB_ENCODING_DEFLATE, 9);
+			$this->sendRawData($batchBuffer);*/
 		} elseif ($packet instanceof StartGamePacket) {
 			$pk = new RequestChunkRadiusPacket();
 			$pk->radius = 8;
@@ -745,8 +824,10 @@ class PocketEditionClient extends UDPServerSocket
 						$uuid = $entry[0];
 						if (!$uuid instanceof UUID) continue;
 						$uuid = $uuid->toString();
+						$eid = (int)$entry[1] ?? 0;
+
 						$entries[$uuid] = [
-							'id' => (int)$entry[1] ?? 0,
+							'id' => $eid,
 							'username' => $entry[2] ?? 'Unknown',
 							'skinId' => $entry[3] ?? 'Standard_Custom',
 							'skinData' => $entry[4] ?? '',
@@ -775,48 +856,50 @@ class PocketEditionClient extends UDPServerSocket
 				$this->damage = 100;
 			}*/
 		} elseif ($packet instanceof MoveEntityPacket) {
-			/*if (($id = $packet->entityRuntimeId) < 666) {
+			if (($id = $packet->entityRuntimeId) > 0) {
 				$loc = $this->player->getPosition();
 				$x = $packet->x;
 				$y = $packet->y;
 				$z = $packet->z;
+
+				// radius 10 blocks
 				$distance = ($loc->distance(new Vector3($x, $y, $z)) < 10);
 				$npc = $this->player;
-				if (($seek = $npc->seekId) > 0) {
-					if ($seek == $packet->entityRuntimeId) {
-						if ($distance) {
-							//see to player
-							$pos = BotHelpers::lookAt(
-								$npc->getPosition(),
-								new Vector3($x, $y, $z)
-							);
-							$pos->setComponents($x, $y, $z);
-							$this->move($pos);
-						} else {
-							$this->player->seekId = 0;
-							$this->damage = 0;
-						}
+				if (($seek = $npc->seekId) > 0 && $seek == $packet->entityRuntimeId) {
+					if ($distance) {
+						//see to player
+						$pos = BotHelpers::lookAt(
+							$npc->getPosition(),
+							new Vector3($x, $y, $z)
+						);
+						$pos->setComponents($x, $y, $z);
+						$this->move($pos); // copy pos player to bot
+					} else {
+						$npc->seekId = 0;
+						$this->damage = 0;
 					}
 				} else {
-					if ($distance) $this->player->seekId = $id;
+					if ($distance && $this->seekFromPlayer) {
+						$npc->seekId = $id;
+					}
 				}
-			}*/
+			}
 			return;
 		}
 
 		if (!Client::DEBUG_PACKETS_PE_ALL && in_array($packet->pid(), [
-			FullChunkDataPacket::NETWORK_ID, SetTimePacket::NETWORK_ID, BlockEntityDataPacket::NETWORK_ID,
-			PlayerListPacket::NETWORK_ID, SetEntityDataPacket::NETWORK_ID, AddPlayerPacket::NETWORK_ID,
-			RemoveEntityPacket::NETWORK_ID, MovePlayerPacket::NETWORK_ID, MoveEntityPacket::NETWORK_ID,
-			LevelSoundEventPacket::NETWORK_ID, PlayerActionPacket::NETWORK_ID, InventoryActionPacket::NETWORK_ID,
-			EntityEventPacket::NETWORK_ID, AnimatePacket::NETWORK_ID,
-			SetEntityMotionPacket::NETWORK_ID, LevelEventPacket::NETWORK_ID, UpdateBlockPacket::NETWORK_ID,
-			MobArmorEquipmentPacket::NETWORK_ID, AddItemEntityPacket::NETWORK_ID, BlockEventPacket::NETWORK_ID,
-			SetEntityLinkPacket::NETWORK_ID, MobEquipmentPacket::NETWORK_ID, AddEntityPacket::NETWORK_ID,
-			AvailableCommandsPacket::NETWORK_ID, MobEffectPacket::NETWORK_ID, ContainerSetSlotPacket::NETWORK_ID,
-			ContainerSetDataPacket::NETWORK_ID, ContainerSetContentPacket::NETWORK_ID, BossEventPacket::NETWORK_ID,
-			ChunkRadiusUpdatedPacket::NETWORK_ID, // spammed this on core
-		])) {
+				FullChunkDataPacket::NETWORK_ID, SetTimePacket::NETWORK_ID, BlockEntityDataPacket::NETWORK_ID,
+				PlayerListPacket::NETWORK_ID, SetEntityDataPacket::NETWORK_ID, AddPlayerPacket::NETWORK_ID,
+				RemoveEntityPacket::NETWORK_ID, MovePlayerPacket::NETWORK_ID, MoveEntityPacket::NETWORK_ID,
+				LevelSoundEventPacket::NETWORK_ID, PlayerActionPacket::NETWORK_ID, InventoryActionPacket::NETWORK_ID,
+				EntityEventPacket::NETWORK_ID, AnimatePacket::NETWORK_ID,
+				SetEntityMotionPacket::NETWORK_ID, LevelEventPacket::NETWORK_ID, UpdateBlockPacket::NETWORK_ID,
+				MobArmorEquipmentPacket::NETWORK_ID, AddItemEntityPacket::NETWORK_ID, BlockEventPacket::NETWORK_ID,
+				SetEntityLinkPacket::NETWORK_ID, MobEquipmentPacket::NETWORK_ID, AddEntityPacket::NETWORK_ID,
+				AvailableCommandsPacket::NETWORK_ID, MobEffectPacket::NETWORK_ID, ContainerSetSlotPacket::NETWORK_ID,
+				ContainerSetDataPacket::NETWORK_ID, ContainerSetContentPacket::NETWORK_ID, BossEventPacket::NETWORK_ID,
+				ChunkRadiusUpdatedPacket::NETWORK_ID, // spammed this on core
+			])) {
 			return;
 		}
 
@@ -842,15 +925,65 @@ class PocketEditionClient extends UDPServerSocket
 		$this->isRegister = true;
 	}
 
+	function sendCommand(string $text)
+	{
+		$args = explode(' ', $text);
+		$command = $args[0];
+		unset($args[0]);
+		$args = array_values($args);
+
+		// https://github.com/Hydreon/Steadfast2/blob/7b8f096f269b51bbad90180ddb680566acfcbdce/src/pocketmine/Player.php#L2254
+		$pk = new CommandStepPacket();
+		$pk->command = $command;
+		$pk->overload = 'default';
+
+		// https://github.com/Hydreon/Steadfast2/blob/41728138438c07aeec55d824171c185a1f5857f0/src/pocketmine/plugin/PluginBase.php#L69
+		$pk->inputJson = [
+			'args' => implode(' ', $args)
+		];
+		$pk->outputJson = [];
+
+		$pk->uvarint1 = 0;
+		$pk->currentStep = 0;
+		$pk->done = true;
+		$pk->clientId = 0;
+
+		$this->sendDataPacket($pk);
+	}
+
 	/**
 	 * @param string $text
 	 */
 	function sendMessage(string $text)
 	{
+		$message = trim(str_replace("\n", '', $text));
+		if (substr($message, 0, 1) === '/') {
+			$this->sendCommand(substr($message, 1));
+			return;
+		}
+
 		$pk = new \protocol\TextPacket();
 		$pk->type = \protocol\TextPacket::TYPE_CHAT;
 		$pk->source = '';
-		$pk->message = $text;
+		$pk->message = $message;
+		$this->sendDataPacket($pk);
+	}
+
+	/**
+	 * @param PlayerLocation $loc
+	 * @param bool $onGround
+	 */
+	function move(PlayerLocation $loc, bool $onGround = true)
+	{
+		$pk = new MovePlayerPacket();
+		$pk->entityRuntimeId = $this->player->getId();
+		$pk->x = $this->player->x = $loc->getX();
+		$pk->y = $this->player->y = $loc->getY();
+		$pk->z = $this->player->z = $loc->getZ();
+		$pk->yaw = $this->player->yaw = $loc->getYaw();
+		$pk->bodyYaw = $loc->getHeadYaw();
+		$pk->pitch = $this->player->pitch = $loc->getPitch();
+		$pk->onGround = $onGround;
 		$this->sendDataPacket($pk);
 	}
 
@@ -869,50 +1002,6 @@ class PocketEditionClient extends UDPServerSocket
 			$stream->putPacket($packet);
 		}
 		$this->sendRawData(NetworkCompression::compress($stream->buffer, $compressionLevel));
-	}
-
-	protected function sendRawData(string $buffer): void
-	{
-		$encapsulated = new EncapsulatedPacket();
-		$encapsulated->reliability = PacketReliability::RELIABLE_ORDERED;
-		$encapsulated->buffer = "\xfe" . $buffer;
-		$this->sendEncapsulated($encapsulated);
-	}
-
-	protected function sendEncapsulated(EncapsulatedPacket $packet): void
-	{
-		if (PacketReliability::isOrdered($packet->reliability)) {
-			$packet->orderIndex = $this->orderIndex++;
-		}
-
-		$maxSize = self::MTU - 60;
-		if (strlen($packet->buffer) > $maxSize) {
-			$buffers = str_split($packet->buffer, $maxSize);
-			$bufferCount = count($buffers);
-			$splitID = ++$this->splitID % 65536;
-
-			foreach ($buffers as $count => $buffer) {
-				$pk = new EncapsulatedPacket();
-				$pk->splitID = $splitID;
-				$pk->hasSplit = true;
-				$pk->splitCount = $bufferCount;
-				$pk->reliability = $packet->reliability;
-				$pk->splitIndex = $count;
-				$pk->buffer = $buffer;
-				if (PacketReliability::isReliable($pk->reliability)) {
-					$pk->messageIndex = $this->messageIndex++;
-				}
-				$pk->sequenceIndex = $packet->sequenceIndex;
-				$pk->orderChannel = 0;
-				$pk->orderIndex = $packet->orderIndex;
-				$this->sendDatagramWithEncapsulated($pk);
-			}
-		} else {
-			if (PacketReliability::isReliable($packet->reliability)) {
-				$packet->messageIndex = $this->messageIndex++;
-			}
-			$this->sendDatagramWithEncapsulated($packet);
-		}
 	}
 
 	public function sendOpenConnectionRequest2(): void

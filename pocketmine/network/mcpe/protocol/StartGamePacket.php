@@ -64,74 +64,49 @@ class StartGamePacket extends DataPacket{
 
 	public function decodePayload(){
 		if (Client::STEADFAST2) {
-//			Buffer::_debug($this->buffer);
-
+			$this->decodeHeaderSF2();
 			// https://github.com/Hydreon/Steadfast2/blob/7b5775cb60edeedf1b91a62d1faef514fda13e22/src/pocketmine/network/protocol/StartGamePacket.php#L58
-			$this->entityUniqueId = $this->getVarInt(); // 1000
-			$this->entityRuntimeId = $this->getVarInt(); // 1000
-			$this->playerGamemode = $this->getSignedVarInt(); // 0
 
-			$this->x = $this->getLFloat(); // 134
-			$this->y = $this->getLFloat(); // 65.620002746582
-			$this->z = $this->getLFloat(); // -305
+			$this->entityRuntimeId = $this->getVarIntSF2(); // 1
+			$this->entityUniqueId = 0; // 0 (not read)
 
-			$this->pitch = $this->getLFloat(); // 0
-			$this->yaw = $this->getLFloat(); // 0
+			$this->playerGamemode = $this->getSignedVarIntSF2(); // 0
+
+			$this->x = $this->getLFloat(); // 0
+			$this->y = $this->getLFloat(); // 1.6200000047684
+			$this->z = $this->getLFloat(); // 0
+
+			$this->pitch = $this->getLFloat(); // 0 (static)
+			$this->yaw = $this->getLFloat(); // 0 (static)
 
 			// level settings
 
-			$this->seed = $this->getSignedVarInt(); // 0
-			$this->dimension = $this->getSignedVarInt(); // 0
-			$this->generator = $this->getSignedVarInt(); // -1
-			$this->worldGamemode = $this->getSignedVarInt(); // 0
-			$this->difficulty = $this->getSignedVarInt(); // -1
+			$this->seed = $this->getSignedVarIntSF2(); // -1
+			$this->dimension = $this->getSignedVarIntSF2(); // 0
+			$this->generator = $this->getSignedVarIntSF2(); // 1
+			$this->worldGamemode = $this->getSignedVarIntSF2(); // 0
+			$this->difficulty = $this->getSignedVarIntSF2(); // 1 (static)
 
 			// default spawn 3x VarInt
-			$this->spawnX = $this->getSignedVarInt(); // 0
-			$this->spawnY = $this->getVarInt(); // -1
-			$this->spawnZ = $this->getSignedVarInt(); // 0
+			$this->spawnX = $this->getSignedVarIntSF2(); // 0
+			$this->spawnY = $this->getVarIntSF2(); // 1
+			$this->spawnZ = $this->getSignedVarIntSF2(); // 0
 
-
-			// I DON'T KNOW HOW THIS READ DATA!!!!
-			/*$this->hasAchievementsDisabled = $this->getBool();
+			$this->hasAchievementsDisabled = $this->getBool(); // 1 (static)
 
 			// DayCycleStopTyme 1x VarInt
-			$this->dayCycleStopTime = $this->getSignedVarInt();
+			$this->dayCycleStopTime = $this->getSignedVarIntSF2(); // 0 (static)
 
-			$this->eduMode = $this->getBool(); // false
+			$this->eduMode = $this->getBool(); // 0 (static)
 
-			$this->rainLevel = $this->getLFloat(); // 0
-			$this->lightningLevel = $this->getLFloat(); //0
-
-			// is multiplayer game
-			$multiplayer = $this->getByte(); // 1
-			// Broadcast to LAN?
-			$broadcastLan = $this->getByte(); // 0 !!! 1
-
-			// Broadcast to XBL?
-			$broadcastXBL = $this->getByte();
+			$this->rainLevel = $this->getLFloat(); // 0 (static)
+			$this->lightningLevel = $this->getLFloat(); // 0 (static)
 
 			// commands enabled
-			$this->commandsEnabled = $this->getBool();
+			$this->commandsEnabled = $this->getBool(); // 1 (static)
 
 			// isTexturepacksRequired 1x Byte
-			$this->isTexturePacksRequired = $this->getBool();
-
-			$this->gameRules = $this->getGameRules();
-			// level settings end
-
-			// level id (random UUID)
-			$this->levelId = $this->getString();
-			// level name
-			$this->worldName = $this->getString();
-			// template pack id
-			$this->premiumWorldTemplateId = $this->getString();
-			// is trial?
-			$this->unknownBool = $this->getBool();
-			// current level time
-			$this->currentTick = $this->getLLong();
-			// enchantment seed
-			$this->getSignedVarInt();*/
+			$this->isTexturePacksRequired = $this->getBool(); // 0 (static)
 			return;
 		}
 

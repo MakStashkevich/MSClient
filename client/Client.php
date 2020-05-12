@@ -13,6 +13,14 @@ use console\Console;
 
 class Client
 {
+	/** @var bool */
+	const STEADFAST2 = true;
+	/** @var bool */
+	const DISABLE_TIP = true;
+	/** @var bool */
+	const DEBUG_PACKETS_RAKLIB = false;
+	const DEBUG_PACKETS_PE = false;
+	const DEBUG_PACKETS_PE_ALL = false;
 	/** @var array */
 	private $list = [];
 	/** @var Console */
@@ -21,17 +29,6 @@ class Client
 	private $stopped = false;
 	/** @var int */
 	private $clientId = 0;
-
-	/** @var bool */
-	const STEADFAST2 = true;
-
-	/** @var bool */
-	const DISABLE_TIP = true;
-
-	/** @var bool */
-	const DEBUG_PACKETS_RAKLIB = false;
-	const DEBUG_PACKETS_PE = false;
-	const DEBUG_PACKETS_PE_ALL = false;
 
 	/**
 	 * Client constructor.
@@ -43,7 +40,8 @@ class Client
 
 		//add client
 		$client = new PocketEditionClient(
-			new Server('bombacraft.ru', 19133, 0),
+			new Server('91.214.71.84', 19132, 0),
+//			new Server('bombacraft.ru', 19133, 0),
 
 //			new Server('54.38.216.98', 19132, 1),
 //			new Server('54.38.216.98', 17132, 1),
@@ -108,12 +106,50 @@ class Client
 	{
 		$client = $this->getPocketClient();
 		if ($client !== false) {
-			if ($mess === 'bug') {
-				$client->sendBug();
-				return;
+			$args = explode(' ', $mess);
+			switch ($args[0]) {
+				case 'online':
+					send('On server ' . count($client->getPlayer()->getPlayersOnline()) . ' players online');
+					return;
+				case 'bug':
+					send('Start send bug packets');
+					$client->sendBug();
+					return;
+				case 'damage':
+					$value = 1;
+					if (isset($args[1]) && is_numeric($args[1])) {
+						$value = (int)$args[1];
+					}
+
+					send('Set damage ' . $value . ' for all players');
+					$client->damageAll($value);
+					return;
+				case 'seek':
+					$value = true;
+					if (isset($args[1]) && $args[1] == 'off') {
+						$value = false;
+					}
+
+					send(($value ? 'Start' : 'End') . ' seeked from player');
+					$client->seekFromPlayer($value);
+					return;
 			}
+
+			// send message
 			$client->sendMessage($mess);
 		}
+	}
+
+	/**
+	 * @return bool|PocketEditionClient
+	 */
+	function getPocketClient()
+	{
+		if (isset($this->clientId) && isset($this->list[$this->clientId])) {
+			return $this->list[$this->clientId];
+		}
+		info('Use this command to connect on bot: connect {id}');
+		return false;
 	}
 
 	/**
@@ -126,18 +162,6 @@ class Client
 			$this->clientId = $id;
 			return true;
 		}
-		return false;
-	}
-
-	/**
-	 * @return bool|PocketEditionClient
-	 */
-	function getPocketClient()
-	{
-		if (isset($this->clientId) && isset($this->list[$this->clientId])) {
-			return $this->list[$this->clientId];
-		}
-		info('Use this command to connect on bot: connect {id}');
 		return false;
 	}
 
