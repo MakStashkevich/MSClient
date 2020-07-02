@@ -65,6 +65,7 @@ use raklib\protocol\ConnectionRequestAccepted;
 use raklib\protocol\Datagram;
 use raklib\protocol\DisconnectionNotification;
 use raklib\protocol\EncapsulatedPacket;
+use raklib\protocol\IncompatibleProtocolVersion;
 use raklib\protocol\NACK;
 use raklib\protocol\NewIncomingConnection;
 use raklib\protocol\OpenConnectionReply1;
@@ -305,9 +306,9 @@ class PocketEditionClient extends UDPServerSocket
 	protected function sendRakNetPacket(Packet $packet): void
 	{
 		$packet->encode();
-		/*if(!$packet instanceof Datagram){
-			send('sendRakNetPacket ' . $this->getClassName($packet));
-		}*/
+		if(!$packet instanceof Datagram){
+			//send('sendRakNetPacket ' . $this->getClassName($packet));
+		}
 		$this->writePacket($packet->buffer, $this->serverAddress->ip, $this->serverAddress->port);
 	}
 
@@ -475,6 +476,8 @@ class PocketEditionClient extends UDPServerSocket
 			}
 			$this->sendNewIncomingConnection();
 			$this->sendLogin = microtime(true) + (mt_rand(24, 80) * 0.001);
+		} elseif ($packet instanceof IncompatibleProtocolVersion) {
+			var_dump('need protocol version raklib: ' . $packet->protocolVersion);
 		}
 	}
 
@@ -655,10 +658,12 @@ class PocketEditionClient extends UDPServerSocket
 		$class = $this->getClassName($packet);
 		try {
 			$packet->decode();
+//			$packet->debug();
 		} catch (Throwable $e) {
 			error('Error on decode: ' . $class . PHP_EOL . $e->getMessage());
 			return;
 		}
+
 		if ($packet instanceof PlayStatusPacket) {
 			if ($packet->status === PlayStatusPacket::PLAYER_SPAWN) {
 				$this->loadRequest = 0;
@@ -855,6 +860,8 @@ class PocketEditionClient extends UDPServerSocket
 			/*if (($seek = $this->player->seekId) > 0 && $packet->event == EntityEventPacket::HURT_ANIMATION) {
 				$this->damage = 100;
 			}*/
+		} else if ($packet instanceof SetEntityMotionPacket) {
+//			var_dump($packet);
 		} elseif ($packet instanceof MoveEntityPacket) {
 			if (($id = $packet->entityRuntimeId) > 0) {
 				$loc = $this->player->getPosition();

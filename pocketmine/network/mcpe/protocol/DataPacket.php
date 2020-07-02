@@ -33,7 +33,7 @@ use pocketmine\utils\BinaryStream;
 use pocketmine\utils\Utils;
 use ReflectionClass;
 use UnexpectedValueException;
-
+use utils\Buffer;
 
 abstract class DataPacket extends BinaryStream{
 
@@ -75,6 +75,11 @@ abstract class DataPacket extends BinaryStream{
 	public function decode(){
 		$this->offset = 1;
 		$this->decodePayload();
+	}
+
+	function debug()
+	{
+		echo "\t\t" . $this->getName() . PHP_EOL . Buffer::_hex_dump($this->getBuffer()) . PHP_EOL . PHP_EOL;
 	}
 
 	/**

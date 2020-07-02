@@ -25,7 +25,6 @@ namespace pocketmine\network\mcpe\protocol;
 
 #include <rules/DataPacket.h>
 
-
 use client\Client;
 use pocketmine\network\mcpe\NetworkSession;
 
@@ -59,9 +58,9 @@ class PlayerListPacket extends DataPacket
 				if ($this->type === self::TYPE_ADD) {
 					$this->entries[$i][0] = $this->getUUID();
 					$this->entries[$i][1] = $this->getVarIntSF2(); // Player ID
-  					$this->entries[$i][2] = $this->getString(); // Player Name
+					$this->entries[$i][2] = $this->getString(); // Player Name
 					$this->entries[$i][3] = $this->getString(); // Standard_Custom (static)
-					$this->entries[$i][4] = $this->getString();
+					$this->entries[$i][4] = $this->getString(); // SkinDataImage
 				} else {
 					$this->entries[$i][0] = $this->getUUID();
 				}

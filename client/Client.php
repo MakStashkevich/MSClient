@@ -40,7 +40,9 @@ class Client
 
 		//add client
 		$client = new PocketEditionClient(
-			new Server('91.214.71.84', 19132, 0),
+//			new Server('play.cubecraft.net', 19132, 0),
+			new Server('pigcraft.ru', 19100, 0),
+//			new Server('91.214.71.84', 19132, 0),
 //			new Server('bombacraft.ru', 19133, 0),
 
 //			new Server('54.38.216.98', 19132, 1),
