@@ -2,7 +2,7 @@
 
 This client was developed solely for testing purposes. Thanks to it, you can connect to Minecraft PE mobile servers simulating the actions of a real user: run, jump, chat and whatever your heart desires...
 
-The code is very old, supports the MCPE v1.2.x version
+The code is very old, supports the MCPE v1.1.x version
 
 Despite this, I still made the repository public (it used to be private) for the purpose of familiarization for other people. 
 
